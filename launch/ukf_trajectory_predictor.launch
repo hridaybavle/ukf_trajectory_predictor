@@ -1,0 +1,18 @@
+<!-- Launches:aukf_trajectory_prediction_node -->
+<launch>
+<!--arg name="config_file"                                             default="params_localization_obs.xml"/-->
+<arg name="drone_id_namespace"                                         default="drone7"/>
+<arg name="drone_id_int"                                               default="7"/>
+<arg name="frequency"                                                  default="30"/>
+
+<group ns="$(arg drone_id_namespace)">
+<!--<node pkg="rviz" 		           type="rviz"                               name="rviz"
+args="-d $(arg AUKF_TRA_PRE)/rviz/result_plot.rviz"/>-->
+
+<!--param name = "config_file"   	   value="$(arg config_file)"   	     type="string" /-->
+<node name="ukf_trajectory_predictor_node"   pkg="ukf_trajectory_predictor"            type="ukf_trajectory_predictor_node"   output="screen">
+	<param name = "drone_id"                   value="$(arg drone_id_int)"               type="string"/>
+	<param name = "frequency"                  value="$(arg frequency)"                  type="double"/>
+</node>
+</group>
+</launch>

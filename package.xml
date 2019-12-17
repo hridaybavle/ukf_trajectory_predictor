@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+<name>ukf_trajectory_predictor</name>
+<version>1.0.0</version>
+<description>
+This package is a general ukf trajectory prediction library
+</description>
+<author email="hriday.bavle@upm.es">Hriday Bavle</author>
+<maintainer email="hriday.bavle@upm.es">Hriday Bavle</maintainer>
+<license>BSD</license>
+<url>TODO</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>tf_conversions</depend>
+  <depend>tf</depend>
+  <depend>robot_process</depend>
+</package>
+
+
