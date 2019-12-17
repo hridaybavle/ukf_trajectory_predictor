@@ -21,11 +21,7 @@
 #include <tf/transform_listener.h>
 
 //ukf library
-#include "ukf/StateVector.h"
-#include "ukf/MeasurementVector.h"
-#include "ukf/Core.h"
-#include "ukf/Config.h"
-#include "ukf/Integrator.h"
+
 
 class aukf_traj_pre : public RobotProcess
 {
@@ -51,7 +47,4 @@ private:
   } measurements_;
 
   bool received_odom_data_;
-
-
-
 };

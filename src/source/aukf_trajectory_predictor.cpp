@@ -37,8 +37,6 @@ void aukf_traj_pre::ownStop()
 
 }
 
-
-
 void aukf_traj_pre::ownRun()
 {
     this->getDronePoseTF();
@@ -48,7 +46,6 @@ void aukf_traj_pre::ownRun()
 
 void aukf_traj_pre::getDronePoseTF()
 {
-
     //check for tf
     tf::StampedTransform drone_pose_transform;
     try{
