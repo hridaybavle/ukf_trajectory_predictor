@@ -53,7 +53,7 @@ private:
     //ukf related
 private:
     int state_size_, measurement_size_;
-    void generate_prediction_f(float dt);
-    Eigen::VectorXf prediction_f_;
+    void generate_model_f(float dt);
+    Eigen::VectorXf model_f_;
 
 };

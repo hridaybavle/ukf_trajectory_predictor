@@ -29,21 +29,31 @@ public:
 
 public:
     void init();
-    void setStateSize(int num);
-    void setMeasurementSize(int num);
-    void setUKFParams();
+    void setUKFParams(int num_state, int num_meas,
+                      Eigen::MatrixXf P, Eigen::MatrixXf Q, Eigen::MatrixXf R,
+                      double alpha, double beta, double lamda);
     void setUKFQRMat();
-    void setPredictionModel(Eigen::VectorXf pred_f);
-    void setStateInitVale(Eigen::VectorXf x);
+    void setPredictionModel(Eigen::VectorXf model_f);
+    void setStateInitValue(Eigen::VectorXf x);
+    void initUKFParams();
+    void UKFPrediction(float dt);
 
-private:
-    Eigen::VectorXf state_vec_x_;
-    Eigen::VectorXf meas_vec_z_;
-
- //predictor and updater
+    //predictor and updater
 private:
     std::unique_ptr<ukf_predictor> ukf_predictor_ptr_;
     std::unique_ptr<ukf_updater> ukf_updater_ptr_;
+
+    //UKF internal params
+private:
+    int num_state_, num_meas_;
+    Eigen::VectorXf state_vec_x_, state_vec_x_aug_;
+    Eigen::VectorXf meas_vec_z_;
+    Eigen::MatrixXf predicted_cov_, predicted_cov_aug_;
+    Eigen::MatrixXf meas_noise_cov_, process_noise_cov_;
+    float alpha_, beta_, lamda_;
+    Eigen::VectorXf weight_m_, weight_c_;
+    float num_sigma_points_;
+    Eigen::VectorXf model_f_;
 
 public:
     void getState(Eigen::VectorXf& X);

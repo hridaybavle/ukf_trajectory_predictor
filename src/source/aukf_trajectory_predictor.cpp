@@ -18,10 +18,20 @@ void aukf_traj_pre::init()
 {
     this->readROSParams();
     received_odom_data_ = false;
+
     generic_ukf_ptr_.reset(new generic_ukf);
-    generic_ukf_ptr_->setStateSize(state_size_);
-    generic_ukf_ptr_->setMeasurementSize(measurement_size_);
-    generic_ukf_ptr_->setPredictionModel(prediction_f_);
+
+    Eigen::MatrixXf P; P.setZero(state_size_, state_size_); P.diagonal().fill(0.5);
+    Eigen::MatrixXf Q; Q.setZero(state_size_, state_size_); Q.diagonal().fill(0.1);
+    Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_); R.diagonal().fill(0.1);
+    double alpha = 1e-3;
+    double beta  = 2;
+    double lamda = 3 - state_size_;
+    generic_ukf_ptr_->setUKFParams(state_size_, measurement_size_,
+                                   P, Q, R, alpha, beta,lamda);
+
+    this->generate_model_f(0);
+    generic_ukf_ptr_->setPredictionModel(model_f_);
 }
 
 void aukf_traj_pre::readROSParams()
@@ -82,10 +92,10 @@ void aukf_traj_pre::getDronePoseTF()
     }
 }
 
-void aukf_traj_pre::generate_prediction_f(float dt)
+void aukf_traj_pre::generate_model_f(float dt)
 {
     //create the prediction model matrix to pass it to the UKF
-    prediction_f_.setZero(state_size_);
+    model_f_.setZero(state_size_);
 
     /* This is the non-linear model for curve estimation
     X(12) = X(12);                                     //curv_d
@@ -105,20 +115,19 @@ void aukf_traj_pre::generate_prediction_f(float dt)
     Eigen::VectorXf X;
     generic_ukf_ptr_->getState(X);
 
-
-    prediction_f_(0)    = X(0) + X(1) * dt;                                 //x */
-    prediction_f_(1)    = X(1) + cos(X(7)) * X(9);               //x_d (using Xsig_pre(7), Xsig_pre(9) not a bug)
-    prediction_f_(2)    = X(2) + X(3) * dt;                                 //y
-    prediction_f_(3)    = X(3) + sin(X(7)) * X(9);               //y_d (using Xsig_pre(7), Xsig_pre(9) not a bug)
-    prediction_f_(4)    = X(4) + X(5) * dt + 0.5 * pow(dt, 2) * X(6);    //z
-    prediction_f_(5)    = X(5) + X(6) * dt;                                //z_d
-    prediction_f_(6)    = X(6);                                               //z_dd
-    prediction_f_(7)    = X(7) + X(8) * dt;                                //theta
-    prediction_f_(8)    = X(8) + X(9) * X(11) + 1e-10;                  //tetha_d
-    prediction_f_(9)    = X(9) + X(10)* dt;                                //vel
-    prediction_f_(10)   = X(10) + 1e-11;                                       //acc
-    prediction_f_(11)   = X(11) + X(12) * dt;                           //curv
-    prediction_f_(12)   = X(12) + 1e-12;                                     //curv_d
+    model_f_(0)    = X(0) + X(1) * dt;                                 //x */
+    model_f_(1)    = X(1) + cos(X(7)) * X(9);                          //x_d (using Xsig_pre(7), Xsig_pre(9) not a bug)
+    model_f_(2)    = X(2) + X(3) * dt;                                 //y
+    model_f_(3)    = X(3) + sin(X(7)) * X(9);                          //y_d (using Xsig_pre(7), Xsig_pre(9) not a bug)
+    model_f_(4)    = X(4) + X(5) * dt + 0.5 * pow(dt, 2) * X(6);       //z
+    model_f_(5)    = X(5) + X(6) * dt;                                //z_d
+    model_f_(6)    = X(6);                                            //z_dd
+    model_f_(7)    = X(7) + X(8) * dt;                                //theta
+    model_f_(8)    = X(8) + X(9) * X(11) + 1e-10;                      //tetha_d
+    model_f_(9)    = X(9) + X(10)* dt;                                //vel
+    model_f_(10)   = X(10) + 1e-11;                                   //acc
+    model_f_(11)   = X(11) + X(12) * dt;                               //curv
+    model_f_(12)   = X(12) + 1e-12;                                     //curv_d
 
 }
 
