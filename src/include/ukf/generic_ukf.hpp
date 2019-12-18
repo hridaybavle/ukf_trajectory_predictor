@@ -29,12 +29,11 @@ public:
 
 public:
     void init();
-
     void setStateSize(int num);
     void setMeasurementSize(int num);
     void setUKFParams();
     void setUKFQRMat();
-    void setPredictionModel();
+    void setPredictionModel(Eigen::VectorXf pred_f);
     void setStateInitVale(Eigen::VectorXf x);
 
 private:
@@ -46,5 +45,7 @@ private:
     std::unique_ptr<ukf_predictor> ukf_predictor_ptr_;
     std::unique_ptr<ukf_updater> ukf_updater_ptr_;
 
+public:
+    void getState(Eigen::VectorXf& X);
 
 };
