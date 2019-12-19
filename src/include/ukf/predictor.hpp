@@ -73,9 +73,9 @@ public:
 
         for(int i= 0; i < Xsig_aug.cols(); ++i)
         {
-            X_predicted(0,i) = Xsig_aug(0,i) + Xsig_aug(1,i) * dt;
-            X_predicted(1,i) = Xsig_aug(1,i) + cos(Xsig_aug(7,i)) * Xsig_aug(9,i);
-            X_predicted(2,i) = Xsig_aug(2,i) + Xsig_aug(3,i) * dt;
+            X_predicted(0,i) = Xsig_aug(0,i) + Xsig_aug(1,i) * dt;                                          //x
+            X_predicted(1,i) = Xsig_aug(1,i) + cos(Xsig_aug(7,i)) * Xsig_aug(9,i);                          //x_d
+            X_predicted(2,i) = Xsig_aug(2,i) + Xsig_aug(3,i) * dt;                                          //y
             X_predicted(3,i) = Xsig_aug(3,i) + sin(Xsig_aug(7,i)) * Xsig_aug(9,i);                          //y_d
             X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt + 0.5 * pow(dt, 2) * Xsig_aug(6,i);       //z
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d

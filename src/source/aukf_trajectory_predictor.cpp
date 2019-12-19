@@ -25,13 +25,13 @@ void ukf_traj_pre::init()
     std::cout << "measurement size " << measurement_size_ << std::endl;
 
     P.setZero(state_size_, state_size_);
-    P.diagonal().fill(0);
+    P.diagonal().fill(1e-4);
     std::cout << "P " << P << std::endl;
     Eigen::MatrixXf Q; Q.setZero(state_size_, state_size_);
     Q.diagonal().fill(1e-2);
     std::cout << "Q " << Q << std::endl;
     Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_);
-    R.diagonal().fill(1e-9);
+    R.diagonal().fill(1e-2);
     std::cout << "R " << R << std::endl;
     float alpha = 1e-9;
     float beta  = 2;
@@ -89,7 +89,12 @@ void ukf_traj_pre::ownRun()
     //perform the update
     if(received_odom_data_)
     {
-        generic_ukf_ptr_->UKFUpdate(measurements_);
+        Eigen::Vector3f z_measured;
+        z_measured(0) = measurements_.point.x;
+        z_measured(1) = measurements_.point.y;
+        z_measured(2) = measurements_.point.z;
+
+        generic_ukf_ptr_->UKFUpdate(z_measured);
         received_odom_data_ = false;
     }
 

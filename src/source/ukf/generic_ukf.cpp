@@ -52,10 +52,14 @@ void generic_ukf::setUKFParams(int num_state, int num_meas,
     weight_m_.resize(num_sigma_points_);
     weight_c_.resize(num_sigma_points_);
 
+    std::cout << "alpha " << alpha_ << std::endl;
+    std::cout << "beta " << beta_ << std::endl;
+    std::cout << "lamda " << lamda_ << std::endl;
+
     weight_m_(0) = lamda_ / (lamda_ + num_aug);
     weight_c_(0) = lamda_ / (lamda_ + num_aug) + (1 - pow(alpha_,2) +  beta_);
 
-    for(int i=0; i < num_sigma_points_; ++i)
+    for(int i=1; i < num_sigma_points_; ++i)
     {
         weight_m_(i) = 0.5 / (lamda_ + num_aug);
         weight_c_(i) = 0.5 / (lamda_ + num_aug);
@@ -99,11 +103,12 @@ void generic_ukf::UKFPrediction(float dt)
 
     state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted_, predicted_cov_,
                                                                 weight_m_, weight_c_);
+
     std::cout << "State x predicted " << state_vec_x_ << std::endl;
     std::cout << "P Predicted" << predicted_cov_ <<  std::endl;
 }
 
-void generic_ukf::UKFUpdate(geometry_msgs::PointStamped Z_measured)
+void generic_ukf::UKFUpdate(Eigen::VectorXf Z_measured)
 {
     //using the predicted Z calculated to get the sigma points measurement update
     Eigen::MatrixXf Z_predicted;
@@ -114,7 +119,11 @@ void generic_ukf::UKFUpdate(geometry_msgs::PointStamped Z_measured)
     Kalman_gain = ukf_updater_ptr_->measurementUpdate(Z_predicted, X_predicted_, state_vec_x_,
                                                       weight_m_, weight_c_);
 
-    std::cout << "kalman gain " << Kalman_gain << std::endl;
+    //updating the state and its covariance
+    ukf_updater_ptr_->updateMeanAndCovariance(state_vec_x_, predicted_cov_, Z_measured);
+
+
+    //std::cout << "kalman gain " << Kalman_gain << std::endl;
 }
 
 

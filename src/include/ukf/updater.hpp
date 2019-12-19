@@ -45,12 +45,12 @@ public:
                                       Eigen::VectorXf Wm, Eigen::VectorXf Wc){
 
         Eigen::MatrixXf Wm_mat = Wm.transpose().replicate(Z_predicted.rows(),1);
-        Eigen::MatrixXf Wc_mat = Wc.transpose().replicate(Z_predicted.rows(),1);
+        Eigen::MatrixXf Wc_mat = Wc.transpose().replicate(X_predicted.rows(),1);
 
         Eigen::MatrixXf Z_predicted_weighted = (Z_predicted.array() * Wm_mat.array()).matrix();
-        Eigen::VectorXf Z_estimate = Z_predicted_weighted.rowwise().sum();
+        Z_estimate_ = Z_predicted_weighted.rowwise().sum();
 
-        Eigen::MatrixXf Z_mean_distance = (Z_predicted.colwise() - Z_estimate);
+        Eigen::MatrixXf Z_mean_distance = (Z_predicted.colwise() - Z_estimate_);
         Eigen::MatrixXf Z_weighted_mean_distance = (Z_mean_distance.array() * Wm_mat.array()).matrix();
         Eigen::MatrixXf S = Z_weighted_mean_distance * Z_mean_distance.transpose();
 
@@ -58,15 +58,22 @@ public:
         Eigen::MatrixXf X_mean_distance_weighted = (X_mean_distance.array() * Wc_mat.array()).matrix();
         Eigen::MatrixXf S_x_z = X_mean_distance_weighted * Z_mean_distance.transpose();
 
-        Eigen::MatrixXf K;
         std::cout << "S " << S << std::endl;
         std::cout << "S_x_z " << S_x_z << std::endl;
 
         if(!S.isZero())
-            K = S_x_z * S.inverse();
+            K_ = S_x_z * S.inverse();
         else
+            K_.setZero(X_predicted.rows(), Z_predicted.rows());
 
-        return K;
+        return K_;
+    }
+
+    void updateMeanAndCovariance(Eigen::VectorXf& X_estimate, Eigen::MatrixXf& P,
+                                  Eigen::VectorXf Z_measured)
+    {
+        X_estimate = X_estimate + K_ * (Z_measured - Z_estimate_);
+        P          = P - K_ * S_ * K_.transpose();
     }
 
 private:
@@ -74,7 +81,8 @@ private:
     int state_size_, measurement_size_, state_size_aug_ ;
     int num_sigma_points_;
     float lamda_;
-
+    Eigen::VectorXf Z_estimate_;
+    Eigen::MatrixXf K_, S_;
 };
 
 #endif

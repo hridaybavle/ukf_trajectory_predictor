@@ -41,7 +41,7 @@ public:
     void setStateInitValue(Eigen::VectorXf x);
     void initUKFParams();
     void UKFPrediction(float dt);
-    void UKFUpdate(geometry_msgs::PointStamped Z_measured);
+    void UKFUpdate(Eigen::VectorXf Z_measured);
 
     //predictor and updater
 private:
