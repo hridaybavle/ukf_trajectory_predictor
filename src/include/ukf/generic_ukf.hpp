@@ -14,6 +14,10 @@
 #include <eigen3/Eigen/Eigen>
 #include <eigen3/Eigen/Core>
 
+//ros
+#include <ros/ros.h>
+#include <geometry_msgs/PointStamped.h>
+
 //predictor
 #include "ukf/predictor.hpp"
 
@@ -37,6 +41,7 @@ public:
     void setStateInitValue(Eigen::VectorXf x);
     void initUKFParams();
     void UKFPrediction(float dt);
+    void UKFUpdate(geometry_msgs::PointStamped Z_measured);
 
     //predictor and updater
 private:
@@ -54,6 +59,8 @@ private:
     Eigen::VectorXf weight_m_, weight_c_;
     int num_sigma_points_;
     Eigen::VectorXf model_f_;
+    Eigen::MatrixXf X_predicted_;
+
 
 public:
     void getState(Eigen::VectorXf& X);

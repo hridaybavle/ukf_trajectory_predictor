@@ -66,6 +66,9 @@ void generic_ukf::setUKFParams(int num_state, int num_meas,
 
     ukf_predictor_ptr_->setPredictionParams(num_state_, num_meas_,
                                             num_sigma_points_, lamda_);
+    ukf_updater_ptr_->setUpdateParams(num_state_, num_meas_,
+                                      num_sigma_points_, lamda_);
+
 }
 
 void generic_ukf::setStateInitValue(Eigen::VectorXf x)
@@ -88,18 +91,30 @@ void generic_ukf::getState(Eigen::VectorXf& X)
 
 void generic_ukf::UKFPrediction(float dt)
 {
-    std::cout << "dt inside" << dt << std::endl;
     Eigen::MatrixXf Xsig_aug;
     Xsig_aug = ukf_predictor_ptr_->generateSigmaPoints(state_vec_x_, predicted_cov_,
                                                        process_noise_cov_, meas_noise_cov_);
-    Eigen::MatrixXf X_predicted;
-    X_predicted = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug, dt);
 
-    state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted, predicted_cov_,
+    X_predicted_ = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug, dt);
+
+    state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted_, predicted_cov_,
                                                                 weight_m_, weight_c_);
-    std::cout << "state x " << state_vec_x_ << std::endl;
-    std::cout << "P " << predicted_cov_ <<  std::endl;
+    std::cout << "State x predicted " << state_vec_x_ << std::endl;
+    std::cout << "P Predicted" << predicted_cov_ <<  std::endl;
+}
 
+void generic_ukf::UKFUpdate(geometry_msgs::PointStamped Z_measured)
+{
+    //using the predicted Z calculated to get the sigma points measurement update
+    Eigen::MatrixXf Z_predicted;
+    Z_predicted = ukf_updater_ptr_->calculatePredictedMeasurement(X_predicted_);
+
+    //performing the update using the measurements
+    Eigen::MatrixXf Kalman_gain;
+    Kalman_gain = ukf_updater_ptr_->measurementUpdate(Z_predicted, X_predicted_, state_vec_x_,
+                                                      weight_m_, weight_c_);
+
+    std::cout << "kalman gain " << Kalman_gain << std::endl;
 }
 
 

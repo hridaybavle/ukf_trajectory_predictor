@@ -42,10 +42,7 @@ private:
     tf::TransformListener drone_pose_listener_;
 
 private:
-    struct {
-        float x,y,z;
-        ros::Time time_stamp;
-    } measurements_;
+    geometry_msgs::PointStamped measurements_;
 
     bool received_odom_data_;
     std::unique_ptr<generic_ukf> generic_ukf_ptr_;

@@ -83,7 +83,15 @@ void ukf_traj_pre::ownRun()
     }
 
     std::cout << "dt out side " << deltaT_ << std::endl;
+    //perform the prediction
     generic_ukf_ptr_->UKFPrediction(deltaT_);
+
+    //perform the update
+    if(received_odom_data_)
+    {
+        generic_ukf_ptr_->UKFUpdate(measurements_);
+        received_odom_data_ = false;
+    }
 
     timePrev_ = timeNow_;
     return;
@@ -99,10 +107,10 @@ void ukf_traj_pre::getDronePoseTF()
         drone_pose_listener_.lookupTransform("/odom","/drone_close_kalman", now, drone_pose_transform);
         received_odom_data_ = true;
 
-        measurements_.time_stamp = ros::Time::now();
-        measurements_.x          = drone_pose_transform.getOrigin().x();
-        measurements_.y          = drone_pose_transform.getOrigin().y();
-        measurements_.z          = drone_pose_transform.getOrigin().z();
+        measurements_.header.stamp = ros::Time::now();
+        measurements_.point.x      = drone_pose_transform.getOrigin().x();
+        measurements_.point.y      = drone_pose_transform.getOrigin().y();
+        measurements_.point.z      = drone_pose_transform.getOrigin().z();
     }
     catch(tf::TransformException ex){
         ROS_ERROR("%s", ex.what());
