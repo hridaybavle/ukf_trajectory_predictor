@@ -25,17 +25,17 @@ void ukf_traj_pre::init()
     std::cout << "measurement size " << measurement_size_ << std::endl;
 
     P.setZero(state_size_, state_size_);
-    P.diagonal().fill(1e-4);
+    P.diagonal().fill(0.1);
     std::cout << "P " << P << std::endl;
     Eigen::MatrixXf Q; Q.setZero(state_size_, state_size_);
     Q.diagonal().fill(1e-2);
     std::cout << "Q " << Q << std::endl;
     Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_);
-    R.diagonal().fill(1e-2);
+    R.diagonal().fill(1e-3);
     std::cout << "R " << R << std::endl;
-    float alpha = 1e-9;
+    float alpha = 1e-3;
     float beta  = 2;
-    float lamda = 3 - state_size_;
+    float lamda = 3 - (state_size_+measurement_size_);
 
     generic_ukf_ptr_->setUKFParams(state_size_, measurement_size_,
                                    P, Q, R, alpha, beta, lamda);

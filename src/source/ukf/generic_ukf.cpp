@@ -46,7 +46,7 @@ void generic_ukf::setUKFParams(int num_state, int num_meas,
     beta_   = beta;
     lamda_  = lamda;
 
-    float num_aug = num_state_ + num_meas_;
+    int num_aug = num_state_ + num_meas_;
     num_sigma_points_ = 2 * (num_aug) + 1;
 
     weight_m_.resize(num_sigma_points_);
@@ -122,8 +122,9 @@ void generic_ukf::UKFUpdate(Eigen::VectorXf Z_measured)
     //updating the state and its covariance
     ukf_updater_ptr_->updateMeanAndCovariance(state_vec_x_, predicted_cov_, Z_measured);
 
-
-    //std::cout << "kalman gain " << Kalman_gain << std::endl;
+    std::cout << "State x corrected " << state_vec_x_ << std::endl;
+    std::cout << "P corrected" << predicted_cov_ <<  std::endl;
+    std::cout << "kalman gain " << Kalman_gain << std::endl;
 }
 
 

@@ -81,15 +81,14 @@ public:
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d
             X_predicted(6,i) = Xsig_aug(6,i);                                                               //z_dd
             X_predicted(7,i) = Xsig_aug(7,i) + Xsig_aug(8,i) * dt;                                          //theta
-            X_predicted(8,i) = Xsig_aug(8,i) + Xsig_aug(9,i) * Xsig_aug(11,i) + Xsig_aug(15,i);             //tetha_d
+            X_predicted(8,i) = Xsig_aug(8,i) + Xsig_aug(9,i) * Xsig_aug(11,i);             //tetha_d
             X_predicted(9,i) = Xsig_aug(9,i) + Xsig_aug(10,i)* dt;                                          //vel
-            X_predicted(10,i)= Xsig_aug(10,i) + Xsig_aug(14,i);                                             //acc
+            X_predicted(10,i)= Xsig_aug(10,i);                                             //acc
             X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) * dt;                                        //curv
-            X_predicted(12,i)= Xsig_aug(12,i) + Xsig_aug(13,i);                                             //curv_d
+            X_predicted(12,i)= Xsig_aug(12,i);                                             //curv_d
         }
 
         return X_predicted;
-
     }
 
 

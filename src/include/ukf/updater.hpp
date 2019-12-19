@@ -52,17 +52,17 @@ public:
 
         Eigen::MatrixXf Z_mean_distance = (Z_predicted.colwise() - Z_estimate_);
         Eigen::MatrixXf Z_weighted_mean_distance = (Z_mean_distance.array() * Wm_mat.array()).matrix();
-        Eigen::MatrixXf S = Z_weighted_mean_distance * Z_mean_distance.transpose();
+        S_ = Z_weighted_mean_distance * Z_mean_distance.transpose();
 
         Eigen::MatrixXf X_mean_distance = (X_predicted.colwise() - X_estimate);
         Eigen::MatrixXf X_mean_distance_weighted = (X_mean_distance.array() * Wc_mat.array()).matrix();
         Eigen::MatrixXf S_x_z = X_mean_distance_weighted * Z_mean_distance.transpose();
 
-        std::cout << "S " << S << std::endl;
+        std::cout << "S " << S_ << std::endl;
         std::cout << "S_x_z " << S_x_z << std::endl;
 
-        if(!S.isZero())
-            K_ = S_x_z * S.inverse();
+        if(!S_.isZero())
+            K_ = S_x_z * S_.inverse();
         else
             K_.setZero(X_predicted.rows(), Z_predicted.rows());
 
