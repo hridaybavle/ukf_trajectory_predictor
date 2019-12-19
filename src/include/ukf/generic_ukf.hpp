@@ -31,7 +31,7 @@ public:
     void init();
     void setUKFParams(int num_state, int num_meas,
                       Eigen::MatrixXf P, Eigen::MatrixXf Q, Eigen::MatrixXf R,
-                      double alpha, double beta, double lamda);
+                      float alpha, float beta, float lamda);
     void setUKFQRMat();
     void setPredictionModel(Eigen::VectorXf model_f);
     void setStateInitValue(Eigen::VectorXf x);
@@ -52,7 +52,7 @@ private:
     Eigen::MatrixXf meas_noise_cov_, process_noise_cov_;
     float alpha_, beta_, lamda_;
     Eigen::VectorXf weight_m_, weight_c_;
-    float num_sigma_points_;
+    int num_sigma_points_;
     Eigen::VectorXf model_f_;
 
 public:

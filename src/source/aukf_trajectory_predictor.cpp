@@ -1,77 +1,95 @@
 //trajectory prediction
 #include "aukf_trajectory_predictor.h"
 
-aukf_traj_pre::aukf_traj_pre()
+ukf_traj_pre::ukf_traj_pre()
 {
+    std::cout << "ukf trajectory predictor constructor" << std::endl;
+}
 
-    this->init();
+ukf_traj_pre::~ukf_traj_pre()
+{
 
 }
 
-aukf_traj_pre::~aukf_traj_pre()
-{
-
-
-}
-
-void aukf_traj_pre::init()
+void ukf_traj_pre::init()
 {
     this->readROSParams();
     received_odom_data_ = false;
+    init_time_          = false;
+    timePrev_ = 0; timeNow_ = 0;
 
     generic_ukf_ptr_.reset(new generic_ukf);
 
-    Eigen::MatrixXf P; P.setZero(state_size_, state_size_); P.diagonal().fill(0.5);
-    Eigen::MatrixXf Q; Q.setZero(state_size_, state_size_); Q.diagonal().fill(0.1);
-    Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_); R.diagonal().fill(0.1);
-    double alpha = 1e-3;
-    double beta  = 2;
-    double lamda = 3 - state_size_;
+    Eigen::MatrixXf P;
+    std::cout << "state size " << state_size_ << std::endl;
+    std::cout << "measurement size " << measurement_size_ << std::endl;
+
+    P.setZero(state_size_, state_size_);
+    P.diagonal().fill(0);
+    std::cout << "P " << P << std::endl;
+    Eigen::MatrixXf Q; Q.setZero(state_size_, state_size_);
+    Q.diagonal().fill(1e-2);
+    std::cout << "Q " << Q << std::endl;
+    Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_);
+    R.diagonal().fill(1e-9);
+    std::cout << "R " << R << std::endl;
+    float alpha = 1e-9;
+    float beta  = 2;
+    float lamda = 3 - state_size_;
+
     generic_ukf_ptr_->setUKFParams(state_size_, measurement_size_,
-                                   P, Q, R, alpha, beta,lamda);
+                                   P, Q, R, alpha, beta, lamda);
 
     this->generate_model_f(0);
     generic_ukf_ptr_->setPredictionModel(model_f_);
 }
 
-void aukf_traj_pre::readROSParams()
+void ukf_traj_pre::readROSParams()
 {
-    ros::param::get("~state_size", state_size_);
-    if(state_size_ == 0)
-        state_size_ = 13;
+    ros::param::param<int>("~state_size",state_size_,13);
+    ros::param::param<int>("~measurement_size",measurement_size_,13);
+}
 
-    ros::param::get("~measurement_size", measurement_size_);
-    if(measurement_size_ == 0)
-        measurement_size_ = 3;
+void ukf_traj_pre::ownSetUp()
+{
+    this->init();
 
 }
 
-void aukf_traj_pre::ownSetUp()
-{
-
-}
-
-void aukf_traj_pre::ownStart()
+void ukf_traj_pre::ownStart()
 {
 
 
 }
 
 
-void aukf_traj_pre::ownStop()
+void ukf_traj_pre::ownStop()
 {
 
 
 }
 
-void aukf_traj_pre::ownRun()
+void ukf_traj_pre::ownRun()
 {
     this->getDronePoseTF();
+    timeNow_ = (double) ros::Time::now().sec + ((double) ros::Time::now().nsec / (double) 1E9);
 
+    if(!init_time_){
+        deltaT_ = 0;
+        init_time_ = true;
+    }
+    else {
+        deltaT_ = timeNow_ - timePrev_;
+    }
+
+    std::cout << "dt out side " << deltaT_ << std::endl;
+    generic_ukf_ptr_->UKFPrediction(deltaT_);
+
+    timePrev_ = timeNow_;
     return;
 }
 
-void aukf_traj_pre::getDronePoseTF()
+void ukf_traj_pre::getDronePoseTF()
 {
     //check for tf
     tf::StampedTransform drone_pose_transform;
@@ -92,7 +110,7 @@ void aukf_traj_pre::getDronePoseTF()
     }
 }
 
-void aukf_traj_pre::generate_model_f(float dt)
+void ukf_traj_pre::generate_model_f(float dt)
 {
     //create the prediction model matrix to pass it to the UKF
     model_f_.setZero(state_size_);
@@ -123,11 +141,11 @@ void aukf_traj_pre::generate_model_f(float dt)
     model_f_(5)    = X(5) + X(6) * dt;                                //z_d
     model_f_(6)    = X(6);                                            //z_dd
     model_f_(7)    = X(7) + X(8) * dt;                                //theta
-    model_f_(8)    = X(8) + X(9) * X(11) + 1e-10;                      //tetha_d
+    model_f_(8)    = X(8) + X(9) * X(11);                             //tetha_d
     model_f_(9)    = X(9) + X(10)* dt;                                //vel
-    model_f_(10)   = X(10) + 1e-11;                                   //acc
+    model_f_(10)   = X(10);                                   //acc
     model_f_(11)   = X(11) + X(12) * dt;                               //curv
-    model_f_(12)   = X(12) + 1e-12;                                     //curv_d
+    model_f_(12)   = X(12);                                     //curv_d
 
 }
 

@@ -23,11 +23,11 @@
 //ukf library
 #include "ukf/generic_ukf.hpp"
 
-class aukf_traj_pre : public RobotProcess
+class ukf_traj_pre : public RobotProcess
 {
 public:
-    aukf_traj_pre();
-    ~aukf_traj_pre();
+    ukf_traj_pre();
+    ~ukf_traj_pre();
 
 public: 
     void ownSetUp();
@@ -49,6 +49,8 @@ private:
 
     bool received_odom_data_;
     std::unique_ptr<generic_ukf> generic_ukf_ptr_;
+    double deltaT_, timePrev_, timeNow_;
+    bool init_time_;
 
     //ukf related
 private:

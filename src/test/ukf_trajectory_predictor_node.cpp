@@ -11,11 +11,11 @@ int main(int argc, char **argv)
   if(frequency == 0)
     frequency = 30;
 
-  aukf_traj_pre aukf_traj_pre_process;
+  ukf_traj_pre ukf_traj_pre_process;
   //Open!
-  aukf_traj_pre_process.setUp();
+  ukf_traj_pre_process.setUp();
   //Start
-  aukf_traj_pre_process.start();
+  ukf_traj_pre_process.start();
 
   ros::Rate r(frequency);
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   while(ros::ok())
   {
     ros::spinOnce();
-    aukf_traj_pre_process.run();
+    ukf_traj_pre_process.run();
     r.sleep();
   }
 

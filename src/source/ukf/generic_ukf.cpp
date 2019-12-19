@@ -23,13 +23,13 @@ void generic_ukf::init()
 
 void generic_ukf::setUKFParams(int num_state, int num_meas,
                                Eigen::MatrixXf P, Eigen::MatrixXf Q, Eigen::MatrixXf R,
-                               double alpha, double beta, double lamda)
+                               float alpha, float beta, float lamda)
 {
     num_state_ =  num_state; num_meas_ = num_meas;
 
     //state vector and covariance
     state_vec_x_.setZero(num_state);
-    predicted_cov_.setZero(num_state, num_meas);
+    predicted_cov_.setZero(num_state, num_state);
 
     //measurement vector
     meas_vec_z_.setZero(num_meas);
@@ -38,27 +38,34 @@ void generic_ukf::setUKFParams(int num_state, int num_meas,
     process_noise_cov_.setZero(num_state, num_state);
     meas_noise_cov_.setZero(num_meas, num_meas);
 
-    predicted_cov_ = P;
+    predicted_cov_     = P;
     process_noise_cov_ = Q;
-    meas_noise_cov_ = R;
+    meas_noise_cov_    = R;
 
-    alpha_ = alpha;
-    beta_ = beta;
-    lamda_ = lamda;
+    alpha_  = alpha;
+    beta_   = beta;
+    lamda_  = lamda;
 
-    num_sigma_points_ = 2 * num_state_ + 1;
+    float num_aug = num_state_ + num_meas_;
+    num_sigma_points_ = 2 * (num_aug) + 1;
 
     weight_m_.resize(num_sigma_points_);
     weight_c_.resize(num_sigma_points_);
 
-    weight_m_(0) = lamda_ / (lamda_ + num_state_);
-    weight_c_(0) = lamda_ / (lamda_ + num_state_) + (1 - pow(alpha_,2) +  beta_);
+    weight_m_(0) = lamda_ / (lamda_ + num_aug);
+    weight_c_(0) = lamda_ / (lamda_ + num_aug) + (1 - pow(alpha_,2) +  beta_);
 
     for(int i=0; i < num_sigma_points_; ++i)
     {
-        weight_m_(i) = 0.5 / (lamda_ + num_state_);
-        weight_c_(i) = 0.5 / (lamda_ + num_state_);
+        weight_m_(i) = 0.5 / (lamda_ + num_aug);
+        weight_c_(i) = 0.5 / (lamda_ + num_aug);
     }
+
+    std::cout << "weight m " << weight_m_ << std::endl;
+    std::cout << "weight c " << weight_c_ << std::endl;
+
+    ukf_predictor_ptr_->setPredictionParams(num_state_, num_meas_,
+                                            num_sigma_points_, lamda_);
 }
 
 void generic_ukf::setStateInitValue(Eigen::VectorXf x)
@@ -81,9 +88,17 @@ void generic_ukf::getState(Eigen::VectorXf& X)
 
 void generic_ukf::UKFPrediction(float dt)
 {
+    std::cout << "dt inside" << dt << std::endl;
+    Eigen::MatrixXf Xsig_aug;
+    Xsig_aug = ukf_predictor_ptr_->generateSigmaPoints(state_vec_x_, predicted_cov_,
+                                                       process_noise_cov_, meas_noise_cov_);
+    Eigen::MatrixXf X_predicted;
+    X_predicted = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug, dt);
 
-
-
+    state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted, predicted_cov_,
+                                                                weight_m_, weight_c_);
+    std::cout << "state x " << state_vec_x_ << std::endl;
+    std::cout << "P " << predicted_cov_ <<  std::endl;
 
 }
 
