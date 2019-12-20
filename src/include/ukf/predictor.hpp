@@ -1,6 +1,7 @@
 #ifndef PREDICTOR_HPP
 #define PREDICTOR_HPP
 #include <iostream>
+#include <math.h>
 
 //egien
 #include <eigen3/Eigen/Dense>
@@ -74,10 +75,10 @@ public:
         for(int i= 0; i < Xsig_aug.cols(); ++i)
         {
             X_predicted(0,i) = Xsig_aug(0,i) + Xsig_aug(1,i) * dt;                                          //x
-            X_predicted(1,i) = Xsig_aug(1,i) + cos(Xsig_aug(7,i)) * Xsig_aug(9,i);                          //x_d
+            X_predicted(1,i) = Xsig_aug(1,i) + Xsig_aug(9,i) * cos(X_predicted(7,i)); /*+ (float) cos( (double) Xsig_aug(7,i)) * Xsig_aug(9,i)*/;        //x_d
             X_predicted(2,i) = Xsig_aug(2,i) + Xsig_aug(3,i) * dt;                                          //y
-            X_predicted(3,i) = Xsig_aug(3,i) + sin(Xsig_aug(7,i)) * Xsig_aug(9,i);                          //y_d
-            X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt + 0.5 * pow(dt, 2) * Xsig_aug(6,i);       //z
+            X_predicted(3,i) = Xsig_aug(3,i) + Xsig_aug(9,i) * sin(X_predicted(7,i)); /*+ (float) sin( (double) Xsig_aug(7,i)) * Xsig_aug(9,i)*/;                          //y_d
+            X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt /*+ (float) (0.5 * pow( (double) (dt), 2) * (double) Xsig_aug(6,i))*/;       //z
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d
             X_predicted(6,i) = Xsig_aug(6,i);                                                               //z_dd
             X_predicted(7,i) = Xsig_aug(7,i) + Xsig_aug(8,i) * dt;                                          //theta
@@ -86,9 +87,17 @@ public:
             X_predicted(10,i)= Xsig_aug(10,i);                                             //acc
             X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) * dt;                                        //curv
             X_predicted(12,i)= Xsig_aug(12,i);                                             //curv_d
+
+            std::cout << "X_predicted " << X_predicted.col(i) << std::endl;
+
+            Eigen::VectorXf X_noise; X_noise.resize(state_size_);
+            X_noise.fill(1e-10);
+
+            //X_predicted.col(i) = X_predicted.col(i) + X_noise;
         }
 
         return X_predicted;
+
     }
 
 

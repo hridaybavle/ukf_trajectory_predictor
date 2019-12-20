@@ -24,7 +24,6 @@ public:
         state_size_aug_   = state_size_ + measurement_size_;
 
         return;
-
     }
 
     Eigen::MatrixXf calculatePredictedMeasurement(Eigen::MatrixXf X_predicted) {
