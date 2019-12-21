@@ -28,7 +28,7 @@ void ukf_traj_pre::init()
     P.diagonal().fill(1e-5);
     std::cout << "P " << P << std::endl;
     Eigen::MatrixXf Q; Q.setZero(measurement_size_, measurement_size_);
-    Q.diagonal().fill(1e-5);
+    Q.diagonal().fill(0.001);
     std::cout << "Q " << Q << std::endl;
     Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_);
     R.diagonal().fill(0.001);
