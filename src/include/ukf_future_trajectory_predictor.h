@@ -14,7 +14,7 @@ private:
     void init()
     {
         ukf_predictor_ptr_.reset(new ukf_predictor);
-        num_future_sec_ = 10;
+        num_future_sec_ = 100;
     }
 
 public:
@@ -45,7 +45,7 @@ public:
                                                           Eigen::MatrixXf Q, Eigen::MatrixXf R, float dt){
 
         std::vector<Eigen::VectorXf> future_state_vec;
-
+        dt = 0.1;
         for(int i =0; i < num_future_sec_; ++i)
         {
             Eigen::MatrixXf Xsig_aug;

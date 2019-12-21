@@ -107,9 +107,7 @@ void generic_ukf::UKFPrediction(float dt)
     Eigen::MatrixXf Xsig_aug;
     Xsig_aug = ukf_predictor_ptr_->generateSigmaPoints(state_vec_x_, predicted_cov_,
                                                        process_noise_cov_, meas_noise_cov_);
-
     X_predicted_ = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug, dt);
-
     state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted_, predicted_cov_);
 
     std::cout << "State x predicted " << state_vec_x_ << std::endl;

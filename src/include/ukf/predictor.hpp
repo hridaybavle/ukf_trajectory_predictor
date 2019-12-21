@@ -88,13 +88,13 @@ public:
             X_predicted(3,i) = sin(Xsig_aug(7,i)) * Xsig_aug(9,i);                                          //y_d
             X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt + 0.5 * pow(dt, 2) * Xsig_aug(6,i);       //z
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d
-            X_predicted(6,i) = Xsig_aug(6,i) + 1e-6;                                           //z_dd
+            X_predicted(6,i) = Xsig_aug(6,i);                                                               //z_dd
             X_predicted(7,i) = Xsig_aug(7,i) + Xsig_aug(8,i) * dt;                                          //theta
             X_predicted(8,i) = Xsig_aug(9,i) * Xsig_aug(11,i);                                              //tetha_d
             X_predicted(9,i) = Xsig_aug(9,i) + Xsig_aug(10,i)* dt;                                          //vel
-            X_predicted(10,i)= Xsig_aug(10,i) + 1e-4;                                                              //acc
-            X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) *dt;                                        //curv
-            X_predicted(12,i)= Xsig_aug(12,i) + 1e-6;                                          //curv_d
+            X_predicted(10,i)= Xsig_aug(10,i) + 1e-9;                                                       //acc
+            X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) *dt;                                         //curv
+            X_predicted(12,i)= Xsig_aug(12,i) + 1e-9;                                                       //curv_d
 
             //            std::cout << "Xsig_aug rows "  << Xsig_aug.rows() << std::endl;
             //            std::cout << "Xsig_aug(13,i) " << Xsig_aug(13,i) << std::endl;
