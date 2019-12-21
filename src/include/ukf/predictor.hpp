@@ -53,20 +53,23 @@ public:
         P_aug.bottomRightCorner(measurement_size_, measurement_size_) = Q;
 
         //create sigma points
-        Eigen::MatrixXf Xsig_aug; Xsig_aug.resize(X_aug.rows(), num_sigma_points_);
+        Eigen::MatrixXf Xsig_aug; Xsig_aug.setZero(X_aug.rows(), num_sigma_points_);
 
         //calculate the square rooot of P_aug
         Eigen::MatrixXf A = P_aug.llt().matrixL();
 
         //calculate sigma points
         Xsig_aug.col(0) = X_aug;
+        float square_root = std::sqrt(lamda_ + state_size_aug_);
+        //std::cout << "square root " << square_root << std::endl;
 
-        Xsig_aug.block(0, 1, state_size_aug_, state_size_aug_) = (std::sqrt(lamda_ + state_size_aug_) * A).colwise() + X_aug;
-
-        Xsig_aug.block(0, state_size_aug_+1, state_size_aug_, state_size_aug_) = (-1 * std::sqrt(lamda_ + state_size_aug_) * A).colwise() + X_aug;
+        for(int i=0; i < state_size_aug_; ++i)
+        {
+            Xsig_aug.col(i + 1) = X_aug + (square_root * A.col(i));
+            Xsig_aug.col(i + (1 + state_size_aug_)) = X_aug - (square_root * A.col(i));
+        }
 
         return Xsig_aug;
-
     }
 
     Eigen::MatrixXf predictUsingSigmaPoints(Eigen::MatrixXf Xsig_aug, float dt){
@@ -84,40 +87,16 @@ public:
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d
             X_predicted(6,i) = Xsig_aug(6,i);                                                               //z_dd
             X_predicted(7,i) = Xsig_aug(7,i) + Xsig_aug(8,i) * dt;                                          //theta
-
-            //limiting theta
-            if(X_predicted(7,i) > 6.28)
-                X_predicted(7,i) = 6.28;
-            else if(X_predicted(7,i) < 0)
-                X_predicted(7,i) = 0;
-
-            //limiting theta_d to 1 rad/s
-            X_predicted(8,i) = Xsig_aug(8,i) + Xsig_aug(9,i) * Xsig_aug(11,i);                                //tetha_d
-
-            if(X_predicted(8,i) > 1)
-                X_predicted(8,i) = 1;
-            else if(X_predicted(8,i) < -1)
-                X_predicted(8,i) = -1;
-
+            X_predicted(8,i) = Xsig_aug(8,i) + Xsig_aug(9,i) * Xsig_aug(11,i);                              //tetha_d
             X_predicted(9,i) = Xsig_aug(9,i) + Xsig_aug(10,i)* dt;                                          //vel
-            X_predicted(10,i)= Xsig_aug(10,i);                                             //acc
-
+            X_predicted(10,i)= Xsig_aug(10,i);                                                              //acc
             X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) * dt;                                        //curv
-            if(X_predicted(11,i) > 10)
-                X_predicted(11,i) = 10;
-            else if(X_predicted(11,i) < -10)
-                X_predicted(11,i) = -10;
-
-            X_predicted(12,i)= Xsig_aug(12,i);                                             //curv_d
-            if(X_predicted(11,i) > 1)
-                X_predicted(11,i) = 1;
-            else if(X_predicted(11,i) < -1)
-                X_predicted(11,i) = -1;
+            X_predicted(12,i)= Xsig_aug(12,i);                                                              //curv_d
 
             Eigen::VectorXf X_noise; X_noise.resize(state_size_);
             X_noise.fill(1e-10);
 
-            X_predicted.col(i) = X_predicted.col(i) + X_noise;
+            //X_predicted.col(i) = X_predicted.col(i) + X_noise;
         }
 
         return X_predicted;
@@ -129,20 +108,20 @@ public:
                                              Eigen::VectorXf Wm, Eigen::VectorXf Wc){
 
         Eigen::VectorXf X;
-        X.fill(0); P.fill(0);
-
-        Eigen::MatrixXf Wm_mat = Wm.transpose().replicate(X_predicted.rows(),1);
-        Eigen::MatrixXf Wc_mat = Wc.transpose().replicate(X_predicted.rows(),1);
+        X.setZero(state_size_); P.setZero(state_size_, state_size_);
 
         // predict the mean
-        Eigen::MatrixXf X_predicted_weighted = (X_predicted.array() * Wm_mat.array()).matrix();
-        X = X_predicted_weighted.rowwise().sum();
+        for(int i= 0; i < num_sigma_points_; ++i)
+        {
+            X += Wm(i) * X_predicted.col(i);
+        }
 
         // calculate the covariance
-        Eigen::MatrixXf X_mean_distance = (X_predicted.colwise() - X);
-        //multiply each sigma point mean distance with it's weight
-        Eigen::MatrixXf X_weighted_mean_distance = (X_mean_distance.array() * Wc_mat.array()).matrix();
-        P = X_weighted_mean_distance * X_mean_distance.transpose();
+        for(int i =0; i < num_sigma_points_; ++i)
+        {
+            Eigen::MatrixXf X_mean_distance = (X_predicted.col(i) - X);
+            P += Wc(i) * (X_mean_distance * X_mean_distance.transpose());
+        }
 
         return X;
     }

@@ -81,7 +81,7 @@ public:
             Szz += Wc(i) * (z_diff * z_diff.transpose());
 
             Eigen::VectorXf x_diff = X_prediction.col(i) - X_estimate;
-            Szx = Szx + Wc(i) * (x_diff * z_diff.transpose());
+            Szx +=  Wc(i) * (x_diff * z_diff.transpose());
         }
 
         S_ = Szz + R;
