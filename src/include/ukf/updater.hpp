@@ -15,13 +15,15 @@ public:
 
 public:
     void setUpdateParams(int num_state, int num_meas,
-                         int num_sigma_points, float lamda){
+                         int num_sigma_points, float lamda,
+                         Eigen::VectorXf Wm, Eigen::VectorXf Wc){
 
         state_size_       = num_state;
         measurement_size_ = num_meas;
         num_sigma_points_ = num_sigma_points;
         lamda_            = lamda;
         state_size_aug_   = state_size_ + measurement_size_;
+        Wm_ = Wm; Wc_ = Wc;
 
         return;
     }
@@ -40,8 +42,8 @@ public:
         return Z_predicted;
     }
 
-    Eigen::MatrixXf measurementUpdate(Eigen::MatrixXf Z_predicted, Eigen::MatrixXf X_prediction, Eigen::VectorXf X_estimate,
-                                      Eigen::VectorXf Wm, Eigen::VectorXf Wc, Eigen::MatrixXf R){
+    Eigen::MatrixXf measurementUpdate(Eigen::MatrixXf Z_predicted, Eigen::MatrixXf X_prediction,
+                                      Eigen::VectorXf X_estimate, Eigen::MatrixXf R){
 
         //Eigen::MatrixXf Wm_mat = Wm.transpose().replicate(Z_predicted.rows(),1);
         //Eigen::MatrixXf Wc_mat = Wc.transpose().replicate(X_predicted.rows(),1);
@@ -50,7 +52,7 @@ public:
 
         for(int i =0; i < num_sigma_points_; ++i)
         {
-            Z_predicted_sum += Wm(i) * Z_predicted.col(i);
+            Z_predicted_sum += Wm_(i) * Z_predicted.col(i);
 
         }
         Z_estimate_ = Z_predicted_sum;
@@ -78,10 +80,10 @@ public:
         for(int i = 0; i < num_sigma_points_; ++i)
         {
             Eigen::VectorXf z_diff = Z_predicted.col(i) - Z_estimate_;
-            Szz += Wc(i) * (z_diff * z_diff.transpose());
+            Szz += Wc_(i) * (z_diff * z_diff.transpose());
 
             Eigen::VectorXf x_diff = X_prediction.col(i) - X_estimate;
-            Szx +=  Wc(i) * (x_diff * z_diff.transpose());
+            Szx +=  Wc_(i) * (x_diff * z_diff.transpose());
         }
 
         S_ = Szz + R;
@@ -115,6 +117,7 @@ private:
     float lamda_;
     Eigen::VectorXf Z_estimate_;
     Eigen::MatrixXf K_, S_;
+    Eigen::VectorXf Wm_, Wc_;
 };
 
 #endif

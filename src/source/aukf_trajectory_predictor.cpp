@@ -17,8 +17,10 @@ void ukf_traj_pre::init()
     received_odom_data_ = false;
     init_time_          = false;
     timePrev_ = 0; timeNow_ = 0;
+    future_point_vec_.clear();
 
     generic_ukf_ptr_.reset(new generic_ukf);
+    future_traj_pred_ptr_.reset(new future_trajectory_predictor);
 
     Eigen::MatrixXf P;
     std::cout << "state size " << state_size_ << std::endl;
@@ -27,21 +29,21 @@ void ukf_traj_pre::init()
     P.setZero(state_size_, state_size_);
     P.diagonal().fill(1e-5);
     std::cout << "P " << P << std::endl;
-    Eigen::MatrixXf Q; Q.setZero(measurement_size_, measurement_size_);
-    Q.diagonal().fill(0.001);
-    std::cout << "Q " << Q << std::endl;
-    Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_);
-    R.diagonal().fill(0.001);
-    std::cout << "R " << R << std::endl;
+    Q_.setZero(measurement_size_, measurement_size_);
+    Q_.diagonal().fill(0.001);
+    std::cout << "Q " << Q_ << std::endl;
+    R_.setZero(measurement_size_, measurement_size_);
+    R_.diagonal().fill(0.001);
+    std::cout << "R " << R_ << std::endl;
     float alpha = 1e-3;
     float beta  = 2;
     float lamda = 3 - (state_size_+measurement_size_);
 
     generic_ukf_ptr_->setUKFParams(state_size_, measurement_size_,
-                                   P, Q, R, alpha, beta, lamda);
+                                   P, Q_, R_, alpha, beta, lamda);
 
-    this->generate_model_f(0);
-    generic_ukf_ptr_->setPredictionModel(model_f_);
+    future_traj_pred_ptr_->setFutureTrajPredParam(state_size_, measurement_size_,
+                                                  alpha, beta, lamda);
 }
 
 void ukf_traj_pre::readROSParams()
@@ -54,6 +56,8 @@ void ukf_traj_pre::ownSetUp()
 {
     this->init();
 
+    //publisher
+    future_trajectory_pub_  = n.advertise<nav_msgs::Path>("drone_future_path", 1);
 }
 
 void ukf_traj_pre::ownStart()
@@ -62,10 +66,8 @@ void ukf_traj_pre::ownStart()
 
 }
 
-
 void ukf_traj_pre::ownStop()
 {
-
 
 }
 
@@ -95,6 +97,14 @@ void ukf_traj_pre::ownRun()
         z_measured(2) = measurements_.point.z;
 
         generic_ukf_ptr_->UKFUpdate(z_measured);
+
+        //get the updated state and covariance to predict future trajectory
+        Eigen::VectorXf X; Eigen::MatrixXf P;
+        std::vector<Eigen::VectorXf> future_state_vec;
+        generic_ukf_ptr_->getState(X); generic_ukf_ptr_->getStateCov(P);
+        future_state_vec = future_traj_pred_ptr_->generateFutureTrajectory(X, P, Q_, R_, deltaT_);
+        this->publishFutureTrajectory(future_state_vec);
+
         received_odom_data_ = false;
     }
 
@@ -123,48 +133,26 @@ void ukf_traj_pre::getDronePoseTF()
     }
 }
 
-void ukf_traj_pre::generate_model_f(float dt)
+
+void ukf_traj_pre::publishFutureTrajectory(std::vector<Eigen::VectorXf> future_state_vec)
 {
-    //create the prediction model matrix to pass it to the UKF
-    model_f_.setZero(state_size_);
+    future_point_vec_.clear();
+    for(size_t i=0; i < future_state_vec.size(); ++i)
+    {
+        geometry_msgs::PoseStamped point;
+        point.header.frame_id = "odom";
+        point.header.stamp = ros::Time::now();
 
-    /* This is the non-linear model for curve estimation
-    X(12) = X(12);                                     //curv_d
-    X(11) = X(11) + dt * X(12);                        //curv
-    X(10) = X(10);                                     //acc
-    X(9) = X(9) + dt * X(10);                          //vel
-    X(8) = X(9) * X(11);                               //tetha_d
-    X(7) = X(7) + dt * X(8);                           //theta
-    X(6) = 0;//X(6);                                   //z_dd
-    X(5) = X(5) + dt * X(6);                           //z_d
-    X(4) = X(4) + dt * X(5) + 0.5 * pow(dt, 2) * X(6); //z
-    X(3) = sin(X(7)) * X(9);                           //y_d
-    X(2) = X(2) + dt * X(3);                           //y
-    X(1) = cos(X(7)) * X(9);                           //x_d
-    X(0) = X(0) + dt * X(1);                           //x */
+        point.pose.position.x = future_state_vec[i](0);
+        point.pose.position.y = future_state_vec[i](1);
+        point.pose.position.z = future_state_vec[i](2);
 
-    Eigen::VectorXf X;
-    generic_ukf_ptr_->getState(X);
+        future_point_vec_.push_back(point);
+    }
 
-    model_f_(0)    = X(0) + X(1) * dt;                                 //x */
-    model_f_(1)    = X(1) + cos(X(7)) * X(9);                          //x_d (using Xsig_pre(7), Xsig_pre(9) not a bug)
-    model_f_(2)    = X(2) + X(3) * dt;                                 //y
-    model_f_(3)    = X(3) + sin(X(7)) * X(9);                          //y_d (using Xsig_pre(7), Xsig_pre(9) not a bug)
-    model_f_(4)    = X(4) + X(5) * dt + 0.5 * pow(dt, 2) * X(6);       //z
-    model_f_(5)    = X(5) + X(6) * dt;                                //z_d
-    model_f_(6)    = X(6);                                            //z_dd
-    model_f_(7)    = X(7) + X(8) * dt;                                //theta
-    model_f_(8)    = X(8) + X(9) * X(11);                             //tetha_d
-    model_f_(9)    = X(9) + X(10)* dt;                                //vel
-    model_f_(10)   = X(10);                                   //acc
-    model_f_(11)   = X(11) + X(12) * dt;                               //curv
-    model_f_(12)   = X(12);                                     //curv_d
-
+    nav_msgs::Path future_path;
+    future_path.header.stamp = ros::Time::now();
+    future_path.header.frame_id = "odom";
+    future_path.poses = future_point_vec_;
+    future_trajectory_pub_.publish(future_path);
 }
-
-
-
-
-
-
-

@@ -13,6 +13,8 @@
 
 //ROS
 #include "ros/ros.h"
+#include "nav_msgs/Path.h"
+#include "geometry_msgs/PoseStamped.h"
 
 //Drone module
 #include "robot_process.h"
@@ -22,6 +24,10 @@
 
 //ukf library
 #include "ukf/generic_ukf.hpp"
+
+//future_traj_predictor
+#include "ukf_future_trajectory_predictor.h"
+
 
 class ukf_traj_pre : public RobotProcess
 {
@@ -37,13 +43,16 @@ public:
     void init();
     void readROSParams();
 
+protected:
+    ros::NodeHandle n;
+    ros::Publisher future_trajectory_pub_;
+
 private:
     void getDronePoseTF();
     tf::TransformListener drone_pose_listener_;
 
 private:
     geometry_msgs::PointStamped measurements_;
-
     bool received_odom_data_;
     std::unique_ptr<generic_ukf> generic_ukf_ptr_;
     double deltaT_, timePrev_, timeNow_;
@@ -52,7 +61,10 @@ private:
     //ukf related
 private:
     int state_size_, measurement_size_;
-    void generate_model_f(float dt);
-    Eigen::VectorXf model_f_;
+    Eigen::MatrixXf Q_; Eigen::MatrixXf R_;
 
+private:
+    std::unique_ptr<future_trajectory_predictor> future_traj_pred_ptr_;
+    void publishFutureTrajectory(std::vector<Eigen::VectorXf> future_state_vec);
+    std::vector<geometry_msgs::PoseStamped> future_point_vec_;
 };

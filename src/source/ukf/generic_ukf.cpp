@@ -69,9 +69,11 @@ void generic_ukf::setUKFParams(int num_state, int num_meas,
     std::cout << "weight c " << weight_c_ << std::endl;
 
     ukf_predictor_ptr_->setPredictionParams(num_state_, num_meas_,
-                                            num_sigma_points_, lamda_);
+                                            num_sigma_points_, lamda_,
+                                            weight_m_, weight_c_);
     ukf_updater_ptr_->setUpdateParams(num_state_, num_meas_,
-                                      num_sigma_points_, lamda_);
+                                      num_sigma_points_, lamda_,
+                                      weight_m_, weight_c_);
 
 }
 
@@ -93,6 +95,13 @@ void generic_ukf::getState(Eigen::VectorXf& X)
     return;
 }
 
+void generic_ukf::getStateCov(Eigen::MatrixXf& P)
+{
+    P = predicted_cov_;
+    return;
+}
+
+
 void generic_ukf::UKFPrediction(float dt)
 {
     Eigen::MatrixXf Xsig_aug;
@@ -101,8 +110,7 @@ void generic_ukf::UKFPrediction(float dt)
 
     X_predicted_ = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug, dt);
 
-    state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted_, predicted_cov_,
-                                                                weight_m_, weight_c_);
+    state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted_, predicted_cov_);
 
     std::cout << "State x predicted " << state_vec_x_ << std::endl;
     std::cout << "P Predicted" << predicted_cov_ <<  std::endl;
@@ -117,7 +125,7 @@ void generic_ukf::UKFUpdate(Eigen::VectorXf Z_measured)
     //performing the update using the measurements
     Eigen::MatrixXf Kalman_gain;
     Kalman_gain = ukf_updater_ptr_->measurementUpdate(Z_predicted, X_predicted_, state_vec_x_,
-                                                      weight_m_, weight_c_, meas_noise_cov_);
+                                                      meas_noise_cov_);
 
     //updating the state and its covariance
     ukf_updater_ptr_->updateMeanAndCovariance(state_vec_x_, predicted_cov_, Z_measured);
@@ -125,6 +133,3 @@ void generic_ukf::UKFUpdate(Eigen::VectorXf Z_measured)
     std::cout << "State x corrected " << state_vec_x_ << std::endl;
     std::cout << "P corrected" << predicted_cov_ <<  std::endl;
 }
-
-
-

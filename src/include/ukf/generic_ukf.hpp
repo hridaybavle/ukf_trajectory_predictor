@@ -64,5 +64,6 @@ private:
 
 public:
     void getState(Eigen::VectorXf& X);
+    void getStateCov(Eigen::MatrixXf& P);
 
 };

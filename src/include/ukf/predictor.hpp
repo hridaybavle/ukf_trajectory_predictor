@@ -24,13 +24,16 @@ public:
     void ukf_prediction();
 
     void setPredictionParams(int num_state, int num_meas,
-                             int num_sigma_points, float lamda){
+                             int num_sigma_points, float lamda,
+                             Eigen::VectorXf Wm, Eigen::VectorXf Wc){
 
         state_size_       = num_state;
         measurement_size_ = num_meas;
         num_sigma_points_ = num_sigma_points;
         lamda_            = lamda;
         state_size_aug_   = state_size_ + measurement_size_;
+        Wm_ = Wm; Wc_ = Wc;
+
         return;
 
     }
@@ -93,13 +96,10 @@ public:
             X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) *dt;                                        //curv
             X_predicted(12,i)= Xsig_aug(12,i) + Xsig_aug(13,i)*dt;                                          //curv_d
 
-            std::cout << "Xsig_aug rows "  << Xsig_aug.rows() << std::endl;
-            std::cout << "Xsig_aug(13,i) " << Xsig_aug(13,i) << std::endl;
-            std::cout << "Xsig_aug(14,i) " << Xsig_aug(14,i) << std::endl;
-            std::cout << "Xsig_aug(15,i) " << Xsig_aug(15,i) << std::endl;
-
-            Eigen::VectorXf X_noise; X_noise.resize(state_size_);
-            X_noise.fill(1e-10);
+            //            std::cout << "Xsig_aug rows "  << Xsig_aug.rows() << std::endl;
+            //            std::cout << "Xsig_aug(13,i) " << Xsig_aug(13,i) << std::endl;
+            //            std::cout << "Xsig_aug(14,i) " << Xsig_aug(14,i) << std::endl;
+            //            std::cout << "Xsig_aug(15,i) " << Xsig_aug(15,i) << std::endl;
 
             //X_predicted.col(i) = X_predicted.col(i) + X_noise;
         }
@@ -109,8 +109,7 @@ public:
     }
 
 
-    Eigen::VectorXf predictMeanAndCovariance(Eigen::MatrixXf X_predicted, Eigen::MatrixXf& P,
-                                             Eigen::VectorXf Wm, Eigen::VectorXf Wc){
+    Eigen::VectorXf predictMeanAndCovariance(Eigen::MatrixXf X_predicted, Eigen::MatrixXf& P){
 
         Eigen::VectorXf X;
         X.setZero(state_size_); P.setZero(state_size_, state_size_);
@@ -118,14 +117,14 @@ public:
         // predict the mean
         for(int i= 0; i < num_sigma_points_; ++i)
         {
-            X += Wm(i) * X_predicted.col(i);
+            X += Wm_(i) * X_predicted.col(i);
         }
 
         // calculate the covariance
         for(int i =0; i < num_sigma_points_; ++i)
         {
             Eigen::MatrixXf X_mean_distance = (X_predicted.col(i) - X);
-            P += Wc(i) * (X_mean_distance * X_mean_distance.transpose());
+            P += Wc_(i) * (X_mean_distance * X_mean_distance.transpose());
         }
 
         return X;
@@ -136,6 +135,7 @@ private:
     int state_size_, measurement_size_, state_size_aug_ ;
     int num_sigma_points_;
     float lamda_;
+    Eigen::VectorXf Wm_, Wc_;
 };
 
 #endif
