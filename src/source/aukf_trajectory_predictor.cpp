@@ -30,10 +30,10 @@ void ukf_traj_pre::init()
     P.diagonal().fill(1e-5);
     std::cout << "P " << P << std::endl;
     Q_.setZero(measurement_size_, measurement_size_);
-    Q_.diagonal().fill(0.001);
+    Q_.diagonal().fill(1e-5);
     std::cout << "Q " << Q_ << std::endl;
     R_.setZero(measurement_size_, measurement_size_);
-    R_.diagonal().fill(0.001);
+    R_.diagonal().fill(1e-9);
     std::cout << "R " << R_ << std::endl;
     float alpha = 1e-3;
     float beta  = 2;
@@ -144,8 +144,8 @@ void ukf_traj_pre::publishFutureTrajectory(std::vector<Eigen::VectorXf> future_s
         point.header.stamp = ros::Time::now();
 
         point.pose.position.x = future_state_vec[i](0);
-        point.pose.position.y = future_state_vec[i](1);
-        point.pose.position.z = future_state_vec[i](2);
+        point.pose.position.y = future_state_vec[i](2);
+        point.pose.position.z = future_state_vec[i](4);
 
         future_point_vec_.push_back(point);
     }
