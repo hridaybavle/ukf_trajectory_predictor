@@ -1,8 +1,10 @@
 #ifndef PREDICTOR_HPP
 #define PREDICTOR_HPP
+#include <cstdint>
+#include <algorithm>
 #include <iostream>
-#include <math.h>
-
+#include <iomanip>
+#include <random>
 //egien
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Eigen>
@@ -48,7 +50,7 @@ public:
         Eigen::MatrixXf P_aug;
         P_aug.setZero(state_size_aug_, state_size_aug_);
         P_aug.topLeftCorner(state_size_, state_size_) = P;
-        P_aug.bottomRightCorner(measurement_size_, measurement_size_) = R;
+        P_aug.bottomRightCorner(measurement_size_, measurement_size_) = Q;
 
         //create sigma points
         Eigen::MatrixXf Xsig_aug; Xsig_aug.resize(X_aug.rows(), num_sigma_points_);
@@ -75,25 +77,47 @@ public:
         for(int i= 0; i < Xsig_aug.cols(); ++i)
         {
             X_predicted(0,i) = Xsig_aug(0,i) + Xsig_aug(1,i) * dt;                                          //x
-            X_predicted(1,i) = Xsig_aug(1,i) + Xsig_aug(9,i) * cos(X_predicted(7,i)); /*+ (float) cos( (double) Xsig_aug(7,i)) * Xsig_aug(9,i)*/;        //x_d
+            X_predicted(1,i) = Xsig_aug(1,i) + cos(Xsig_aug(7,i)) * Xsig_aug(9,i);                          //x_d
             X_predicted(2,i) = Xsig_aug(2,i) + Xsig_aug(3,i) * dt;                                          //y
-            X_predicted(3,i) = Xsig_aug(3,i) + Xsig_aug(9,i) * sin(X_predicted(7,i)); /*+ (float) sin( (double) Xsig_aug(7,i)) * Xsig_aug(9,i)*/;                          //y_d
-            X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt /*+ (float) (0.5 * pow( (double) (dt), 2) * (double) Xsig_aug(6,i))*/;       //z
+            X_predicted(3,i) = Xsig_aug(3,i) + sin(Xsig_aug(7,i)) * Xsig_aug(9,i);                          //y_d
+            X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt + 0.5 * pow(dt, 2) * Xsig_aug(6,i);       //z
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d
             X_predicted(6,i) = Xsig_aug(6,i);                                                               //z_dd
             X_predicted(7,i) = Xsig_aug(7,i) + Xsig_aug(8,i) * dt;                                          //theta
-            X_predicted(8,i) = Xsig_aug(8,i) + Xsig_aug(9,i) * Xsig_aug(11,i);             //tetha_d
+
+            //limiting theta
+            if(X_predicted(7,i) > 6.28)
+                X_predicted(7,i) = 6.28;
+            else if(X_predicted(7,i) < 0)
+                X_predicted(7,i) = 0;
+
+            //limiting theta_d to 1 rad/s
+            X_predicted(8,i) = Xsig_aug(8,i) + Xsig_aug(9,i) * Xsig_aug(11,i);                                //tetha_d
+
+            if(X_predicted(8,i) > 1)
+                X_predicted(8,i) = 1;
+            else if(X_predicted(8,i) < -1)
+                X_predicted(8,i) = -1;
+
             X_predicted(9,i) = Xsig_aug(9,i) + Xsig_aug(10,i)* dt;                                          //vel
             X_predicted(10,i)= Xsig_aug(10,i);                                             //acc
-            X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) * dt;                                        //curv
-            X_predicted(12,i)= Xsig_aug(12,i);                                             //curv_d
 
-            std::cout << "X_predicted " << X_predicted.col(i) << std::endl;
+            X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) * dt;                                        //curv
+            if(X_predicted(11,i) > 10)
+                X_predicted(11,i) = 10;
+            else if(X_predicted(11,i) < -10)
+                X_predicted(11,i) = -10;
+
+            X_predicted(12,i)= Xsig_aug(12,i);                                             //curv_d
+            if(X_predicted(11,i) > 1)
+                X_predicted(11,i) = 1;
+            else if(X_predicted(11,i) < -1)
+                X_predicted(11,i) = -1;
 
             Eigen::VectorXf X_noise; X_noise.resize(state_size_);
             X_noise.fill(1e-10);
 
-            //X_predicted.col(i) = X_predicted.col(i) + X_noise;
+            X_predicted.col(i) = X_predicted.col(i) + X_noise;
         }
 
         return X_predicted;

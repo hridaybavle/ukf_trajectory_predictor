@@ -25,13 +25,13 @@ void ukf_traj_pre::init()
     std::cout << "measurement size " << measurement_size_ << std::endl;
 
     P.setZero(state_size_, state_size_);
-    P.diagonal().fill(0.1);
+    P.diagonal().fill(1e-3);
     std::cout << "P " << P << std::endl;
-    Eigen::MatrixXf Q; Q.setZero(state_size_, state_size_);
+    Eigen::MatrixXf Q; Q.setZero(measurement_size_, measurement_size_);
     Q.diagonal().fill(1e-2);
     std::cout << "Q " << Q << std::endl;
     Eigen::MatrixXf R; R.setZero(measurement_size_, measurement_size_);
-    R.diagonal().fill(1e-3);
+    R.diagonal().fill(1e-5);
     std::cout << "R " << R << std::endl;
     float alpha = 1e-3;
     float beta  = 2;

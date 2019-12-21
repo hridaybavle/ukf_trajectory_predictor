@@ -117,14 +117,13 @@ void generic_ukf::UKFUpdate(Eigen::VectorXf Z_measured)
     //performing the update using the measurements
     Eigen::MatrixXf Kalman_gain;
     Kalman_gain = ukf_updater_ptr_->measurementUpdate(Z_predicted, X_predicted_, state_vec_x_,
-                                                      weight_m_, weight_c_);
+                                                      weight_m_, weight_c_, meas_noise_cov_);
 
     //updating the state and its covariance
     ukf_updater_ptr_->updateMeanAndCovariance(state_vec_x_, predicted_cov_, Z_measured);
 
     std::cout << "State x corrected " << state_vec_x_ << std::endl;
     std::cout << "P corrected" << predicted_cov_ <<  std::endl;
-    std::cout << "kalman gain " << Kalman_gain << std::endl;
 }
 
 
