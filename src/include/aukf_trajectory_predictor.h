@@ -15,6 +15,7 @@
 #include "ros/ros.h"
 #include "nav_msgs/Path.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "gazebo_msgs/ModelStates.h"
 
 //Drone module
 #include "robot_process.h"
@@ -46,7 +47,9 @@ public:
 protected:
     ros::NodeHandle n;
     ros::Publisher future_trajectory_pub_;
+    ros::Subscriber drone_gazebo_pose_sub_;
 
+    void droneGazeboPoseCallback(const gazebo_msgs::ModelStates msg);
 private:
     void getDronePoseTF();
     tf::TransformListener drone_pose_listener_;
@@ -61,6 +64,7 @@ private:
     //ukf related
 private:
     int state_size_, measurement_size_;
+    bool simulation_;
     Eigen::MatrixXf Q_; Eigen::MatrixXf R_;
 
 private:

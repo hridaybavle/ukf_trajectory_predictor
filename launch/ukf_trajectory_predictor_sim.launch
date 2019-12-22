@@ -6,7 +6,7 @@
 <arg name="frequency"                                                  default="10"/>
 <arg name="state_size"                                                 default="13"/>
 <arg name="measurement_size"                                           default="3"/>
-<arg name="simulation"                                           			 default="false"/>
+<arg name="simulation"                                           			 default="true"/>
 
 <group ns="$(arg drone_id_namespace)">
 <!--<node pkg="rviz" 		           type="rviz"                               name="rviz"
@@ -21,4 +21,7 @@ args="-d $(arg AUKF_TRA_PRE)/rviz/result_plot.rviz"/>-->
 	<param name = "simulation"           			 value="$(arg simulation)"           			 type="bool"/>
 </node>
 </group>
+
+ <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 odom world 100" />
+
 </launch>

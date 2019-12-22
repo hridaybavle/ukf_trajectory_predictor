@@ -28,7 +28,10 @@ void ukf_traj_pre::init()
 
     P.setZero(state_size_, state_size_);
     //P.diagonal().fill(1e-5);
-    P.diagonal() << 1e-2, 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
+    //real flight
+    //P.diagonal() << 1e-2, 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
+    //simulation
+    P.diagonal() << 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-1, 1e-2, 1e-4, 1e-4, 1e-1, 1e-2;
     std::cout << "P " << P << std::endl;
     Q_.setZero(measurement_size_, measurement_size_);
     Q_.diagonal().fill(1e-3);
@@ -51,6 +54,7 @@ void ukf_traj_pre::readROSParams()
 {
     ros::param::param<int>("~state_size",state_size_,13);
     ros::param::param<int>("~measurement_size",measurement_size_,13);
+    ros::param::param<bool>("~simulation",simulation_,false);
 }
 
 void ukf_traj_pre::ownSetUp()
@@ -59,6 +63,9 @@ void ukf_traj_pre::ownSetUp()
 
     //publisher
     future_trajectory_pub_  = n.advertise<nav_msgs::Path>("drone_future_path", 1);
+
+    //subscriber
+    drone_gazebo_pose_sub_  = n.subscribe("/gazebo/model_states",1,&ukf_traj_pre::droneGazeboPoseCallback, this);
 }
 
 void ukf_traj_pre::ownStart()
@@ -114,6 +121,9 @@ void ukf_traj_pre::ownRun()
 
 void ukf_traj_pre::getDronePoseTF()
 {
+    if(simulation_)
+        return;
+
     //check for tf
     tf::StampedTransform drone_pose_transform;
     try{
@@ -130,6 +140,25 @@ void ukf_traj_pre::getDronePoseTF()
     catch(tf::TransformException ex){
         ROS_ERROR("%s", ex.what());
         received_odom_data_ = false;
+    }
+}
+
+void ukf_traj_pre::droneGazeboPoseCallback(const gazebo_msgs::ModelStates msg)
+{
+    if(!simulation_)
+        return;
+
+    for (size_t i = 0; i < msg.name.size(); i++)
+    {
+        if (msg.name[i].compare("moving_drone") == 0)
+        {
+            measurements_.header.stamp = ros::Time::now();
+            measurements_.point.x = msg.pose[i].position.x;
+            measurements_.point.y = msg.pose[i].position.y;
+            measurements_.point.z = msg.pose[i].position.z;
+            received_odom_data_  = true;
+            break;
+        }
     }
 }
 
