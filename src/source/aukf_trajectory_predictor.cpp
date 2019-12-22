@@ -28,13 +28,13 @@ void ukf_traj_pre::init()
 
     P.setZero(state_size_, state_size_);
     //P.diagonal().fill(1e-5);
-    P.diagonal() << 10, 10, 10, 10, 10, 10, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
+    P.diagonal() << 1e-2, 10, 1e-2, 0.1, 10, 10, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
     std::cout << "P " << P << std::endl;
     Q_.setZero(measurement_size_, measurement_size_);
     Q_.diagonal().fill(1e-3);
     std::cout << "Q " << Q_ << std::endl;
     R_.setZero(measurement_size_, measurement_size_);
-    R_.diagonal().fill(1e-9);
+    R_.diagonal().fill(1e-12);
     std::cout << "R " << R_ << std::endl;
     float alpha = 1e-3;
     float beta  = 2;
