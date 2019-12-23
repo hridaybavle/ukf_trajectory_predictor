@@ -14,7 +14,7 @@ private:
     void init()
     {
         ukf_predictor_ptr_.reset(new ukf_predictor);
-        num_future_sec_ = 50;
+        num_future_sec_ = 100;
     }
 
 public:

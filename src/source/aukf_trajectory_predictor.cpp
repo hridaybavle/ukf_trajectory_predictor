@@ -31,10 +31,12 @@ void ukf_traj_pre::init()
     //real flight
     //P.diagonal() << 1e-2, 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
     //simulation
-    P.diagonal() << 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-1, 1e-2, 1e-4, 1e-4, 1e-1, 1e-2;
+    //P.diagonal() << 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-1, 1e-2, 1e-4, 1e-4, 1e-1, 1e-2;
+    //P.diagonal() << 1e-2, 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
+    P.diagonal() << 0.1, 1e-3, 0.1, 1e-3, 1e-2, 1e-2, 1e-2, 1e-2, 1e-4, 1e-3;
     std::cout << "P " << P << std::endl;
     Q_.setZero(measurement_size_, measurement_size_);
-    Q_.diagonal().fill(1e-3);
+    Q_.diagonal().fill(1e-1);
     std::cout << "Q " << Q_ << std::endl;
     R_.setZero(measurement_size_, measurement_size_);
     R_.diagonal().fill(1e-9);
@@ -52,8 +54,8 @@ void ukf_traj_pre::init()
 
 void ukf_traj_pre::readROSParams()
 {
-    ros::param::param<int>("~state_size",state_size_,13);
-    ros::param::param<int>("~measurement_size",measurement_size_,13);
+    ros::param::param<int>("~state_size",state_size_,10);
+    ros::param::param<int>("~measurement_size",measurement_size_,10);
     ros::param::param<bool>("~simulation",simulation_,false);
 }
 
@@ -98,10 +100,10 @@ void ukf_traj_pre::ownRun()
     //perform the update
     if(received_odom_data_)
     {
-        Eigen::Vector3f z_measured;
+        Eigen::Vector2f z_measured;
         z_measured(0) = measurements_.point.x;
         z_measured(1) = measurements_.point.y;
-        z_measured(2) = measurements_.point.z;
+        //z_measured(2) = measurements_.point.z;
 
         generic_ukf_ptr_->UKFUpdate(z_measured);
 
@@ -174,7 +176,7 @@ void ukf_traj_pre::publishFutureTrajectory(std::vector<Eigen::VectorXf> future_s
 
         point.pose.position.x = future_state_vec[i](0);
         point.pose.position.y = future_state_vec[i](2);
-        point.pose.position.z = future_state_vec[i](4);
+        point.pose.position.z = measurements_.point.z;//future_state_vec[i](4);
 
         future_point_vec_.push_back(point);
     }

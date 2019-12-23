@@ -36,7 +36,7 @@ public:
         {
             Z_predicted(0,i) = X_predicted(0,i);
             Z_predicted(1,i) = X_predicted(2,i);
-            Z_predicted(2,i) = X_predicted(4,i);
+            //Z_predicted(2,i) = X_predicted(4,i);
         }
 
         return Z_predicted;

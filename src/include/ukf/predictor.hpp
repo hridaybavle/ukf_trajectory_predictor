@@ -72,7 +72,7 @@ public:
             Xsig_aug.col(i + (1 + state_size_aug_)) = X_aug - (square_root * A.col(i));
         }
 
-         return Xsig_aug;
+        return Xsig_aug;
     }
 
     Eigen::MatrixXf predictUsingSigmaPoints(Eigen::MatrixXf Xsig_aug, float dt){
@@ -83,7 +83,7 @@ public:
         for(int i= 0; i < Xsig_aug.cols(); ++i)
         {
             //first predicting from curv_d until theta
-            X_predicted(12,i)= Xsig_aug(12,i) + 1e-9;                                                      //curv_d
+            /*            X_predicted(12,i)= Xsig_aug(12,i) + 1e-9;                                                      //curv_d
             X_predicted(11,i)= Xsig_aug(11,i) + Xsig_aug(12,i) *dt;                                         //curv
             X_predicted(10,i)= Xsig_aug(10,i) + 1e-9;                                                      //acc
             X_predicted(9,i) = Xsig_aug(9,i) + Xsig_aug(10,i)* dt;                                          //vel
@@ -96,7 +96,20 @@ public:
             X_predicted(3,i) = sin(X_predicted(7,i)) * X_predicted(9,i);                                    //y_d
             X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt + 0.5 * pow(dt, 2) * Xsig_aug(6,i);       //z
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d
-            X_predicted(6,i) = Xsig_aug(6,i);                                                               //z_dd
+            X_predicted(6,i) = Xsig_aug(6,i);  */                                                             //z_dd
+
+            X_predicted(9,i)= Xsig_aug(9,i) + 1e-6;                                                         //curv_d
+            X_predicted(8,i)= Xsig_aug(8,i) + Xsig_aug(9,i) *dt;                                            //curv
+            X_predicted(7,i)= Xsig_aug(7,i) + 1e-6;                                                         //acc
+            X_predicted(6,i) = Xsig_aug(6,i) + Xsig_aug(7,i)* dt;                                           //vel
+            X_predicted(5,i) = Xsig_aug(6,i) * Xsig_aug(8,i) + 1e-6;                                        //tetha_d
+            X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt;                                          //theta
+            //second predicting from X to z_dd
+            X_predicted(0,i) = Xsig_aug(0,i) + Xsig_aug(1,i) * dt;                                          //x
+            X_predicted(1,i) = cos(X_predicted(4,i)) * X_predicted(6,i);                                    //x_d
+            X_predicted(2,i) = Xsig_aug(2,i) + Xsig_aug(3,i) * dt;                                          //y
+            X_predicted(3,i) = sin(X_predicted(4,i)) * X_predicted(6,i);                                    //y_d
+
 
             //            std::cout << "Xsig_aug rows "  << Xsig_aug.rows() << std::endl;
             //            std::cout << "Xsig_aug(13,i) " << Xsig_aug(13,i) << std::endl;
