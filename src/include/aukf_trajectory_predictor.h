@@ -63,7 +63,7 @@ private:
 
     //ukf related
 private:
-    int state_size_, measurement_size_;
+    int state_size_, measurement_size_, state_noise_size_;
     bool simulation_;
     Eigen::MatrixXf Q_; Eigen::MatrixXf R_;
 

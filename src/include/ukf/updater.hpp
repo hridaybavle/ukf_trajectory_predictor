@@ -22,20 +22,19 @@ public:
         measurement_size_ = num_meas;
         num_sigma_points_ = num_sigma_points;
         lamda_            = lamda;
-        state_size_aug_   = state_size_ + measurement_size_;
         Wm_ = Wm; Wc_ = Wc;
 
         return;
     }
 
-    Eigen::MatrixXf calculatePredictedMeasurement(Eigen::MatrixXf X_predicted) {
+    Eigen::MatrixXf calculatePredictedMeasurement(Eigen::MatrixXf X_predicted, Eigen::MatrixXf Xsig_aug) {
 
         Eigen::MatrixXf Z_predicted; Z_predicted.resize(measurement_size_, num_sigma_points_);
 
         for(int i = 0; i < num_sigma_points_; ++i)
         {
-            Z_predicted(0,i) = X_predicted(0,i);
-            Z_predicted(1,i) = X_predicted(2,i);
+            Z_predicted(0,i) = X_predicted(0,i) + Xsig_aug(13,i);
+            Z_predicted(1,i) = X_predicted(2,i) + Xsig_aug(14,i);
             //Z_predicted(2,i) = X_predicted(4,i);
         }
 
@@ -57,22 +56,6 @@ public:
         }
         Z_estimate_ = Z_predicted_sum;
 
-        //        Eigen::MatrixXf Z_mean_distance = (Z_predicted.colwise() - Z_estimate_);
-        //        Eigen::MatrixXf Z_weighted_mean_distance = (Z_mean_distance.array() * Wc_mat.array()).matrix();
-        //        S_ = Z_weighted_mean_distance * Z_mean_distance.transpose();
-
-        //        Eigen::MatrixXf X_mean_distance = (X_predicted.colwise() - X_estimate);
-        //        Eigen::MatrixXf X_mean_distance_weighted = (X_mean_distance.array() * Wc_mat.array()).matrix();
-        //        Eigen::MatrixXf S_x_z = X_mean_distance_weighted * Z_mean_distance.transpose();
-
-        //        std::cout << "S size" << S_.rows() << "," << S_.cols() << std::endl;
-        //        std::cout << "S_x_z " << S_x_z.rows() << "," << S_x_z.cols() << std::endl;
-
-        //        if(!S_.isZero())
-        //            K_ = S_x_z * S_.inverse();
-        //        else
-        //            K_.setZero(X_predicted.rows(), Z_predicted.rows());
-
         //measurement covariance [3*3]
         Eigen::MatrixXf Szz; Szz.setZero(measurement_size_, measurement_size_);
         //measurement cross covariance [13*3]
@@ -86,7 +69,7 @@ public:
             Szx +=  Wc_(i) * (x_diff * z_diff.transpose());
         }
 
-        S_ = Szz + R;
+        S_ = Szz;
         std::cout << "S_ " << S_ << std::endl;
 
         if(!S_.isZero())
@@ -112,7 +95,7 @@ public:
 
 private:
     Eigen::MatrixXf prediction_f_;
-    int state_size_, measurement_size_, state_size_aug_ ;
+    int state_size_, measurement_size_;
     int num_sigma_points_;
     float lamda_;
     Eigen::VectorXf Z_estimate_;

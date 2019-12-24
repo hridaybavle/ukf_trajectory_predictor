@@ -33,29 +33,30 @@ void ukf_traj_pre::init()
     //simulation
     //P.diagonal() << 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-1, 1e-2, 1e-4, 1e-4, 1e-1, 1e-2;
     //P.diagonal() << 1e-2, 10, 1e-2, 10, 1e-2, 10, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
-    P.diagonal() << 0.1, 1e-3, 0.1, 1e-3, 1e-2, 1e-2, 1e-2, 1e-2, 1e-4, 1e-3;
+    P.diagonal() << 1e-3, 1e-3, 1e-3, 1e-3, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-1;
     std::cout << "P " << P << std::endl;
-    Q_.setZero(measurement_size_, measurement_size_);
-    Q_.diagonal().fill(1e-1);
+    Q_.setZero(state_noise_size_, state_noise_size_);
+    Q_.diagonal() << 1e-3, 1e-3, 1e-10;
     std::cout << "Q " << Q_ << std::endl;
     R_.setZero(measurement_size_, measurement_size_);
-    R_.diagonal().fill(1e-9);
+    R_.diagonal().fill(1e-2);
     std::cout << "R " << R_ << std::endl;
     float alpha = 1e-3;
     float beta  = 2;
-    float lamda = 3 - (state_size_+measurement_size_);
+    float lamda = 3 - (state_size_+state_noise_size_+measurement_size_);
 
-    generic_ukf_ptr_->setUKFParams(state_size_, measurement_size_,
+    generic_ukf_ptr_->setUKFParams(state_size_, state_noise_size_, measurement_size_,
                                    P, Q_, R_, alpha, beta, lamda);
 
-    future_traj_pred_ptr_->setFutureTrajPredParam(state_size_, measurement_size_,
+    future_traj_pred_ptr_->setFutureTrajPredParam(state_size_, state_noise_size_, measurement_size_,
                                                   alpha, beta, lamda);
 }
 
 void ukf_traj_pre::readROSParams()
 {
     ros::param::param<int>("~state_size",state_size_,10);
-    ros::param::param<int>("~measurement_size",measurement_size_,10);
+    ros::param::param<int>("~state_noise_size",state_noise_size_,3);
+    ros::param::param<int>("~measurement_size",measurement_size_,2);
     ros::param::param<bool>("~simulation",simulation_,false);
 }
 

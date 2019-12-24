@@ -21,7 +21,7 @@ void generic_ukf::init()
     return;
 }
 
-void generic_ukf::setUKFParams(int num_state, int num_meas,
+void generic_ukf::setUKFParams(int num_state, int num_state_noise,  int num_meas,
                                Eigen::MatrixXf P, Eigen::MatrixXf Q, Eigen::MatrixXf R,
                                float alpha, float beta, float lamda)
 {
@@ -46,7 +46,7 @@ void generic_ukf::setUKFParams(int num_state, int num_meas,
     beta_   = beta;
     lamda_  = lamda;
 
-    int num_aug = num_state_ + num_meas_;
+    int num_aug = num_state_ + num_state_noise + num_meas_;
     num_sigma_points_ = 2 * (num_aug) + 1;
 
     weight_m_.resize(num_sigma_points_);
@@ -68,9 +68,10 @@ void generic_ukf::setUKFParams(int num_state, int num_meas,
     std::cout << "weight m " << weight_m_ << std::endl;
     std::cout << "weight c " << weight_c_ << std::endl;
 
-    ukf_predictor_ptr_->setPredictionParams(num_state_, num_meas_,
+    ukf_predictor_ptr_->setPredictionParams(num_state_, num_meas_, num_aug, num_state_noise,
                                             num_sigma_points_, lamda_,
                                             weight_m_, weight_c_);
+
     ukf_updater_ptr_->setUpdateParams(num_state_, num_meas_,
                                       num_sigma_points_, lamda_,
                                       weight_m_, weight_c_);
@@ -104,10 +105,9 @@ void generic_ukf::getStateCov(Eigen::MatrixXf& P)
 
 void generic_ukf::UKFPrediction(float dt)
 {
-    Eigen::MatrixXf Xsig_aug;
-    Xsig_aug = ukf_predictor_ptr_->generateSigmaPoints(state_vec_x_, predicted_cov_,
-                                                       process_noise_cov_, meas_noise_cov_);
-    X_predicted_ = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug, dt);
+    Xsig_aug_ = ukf_predictor_ptr_->generateSigmaPoints(state_vec_x_, predicted_cov_,
+                                                        process_noise_cov_, meas_noise_cov_);
+    X_predicted_ = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug_, dt);
     state_vec_x_ = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted_, predicted_cov_);
 
     std::cout << "State x predicted " << state_vec_x_ << std::endl;
@@ -118,7 +118,7 @@ void generic_ukf::UKFUpdate(Eigen::VectorXf Z_measured)
 {
     //using the predicted Z calculated to get the sigma points measurement update
     Eigen::MatrixXf Z_predicted;
-    Z_predicted = ukf_updater_ptr_->calculatePredictedMeasurement(X_predicted_);
+    Z_predicted = ukf_updater_ptr_->calculatePredictedMeasurement(X_predicted_, Xsig_aug_);
 
     //performing the update using the measurements
     Eigen::MatrixXf Kalman_gain;

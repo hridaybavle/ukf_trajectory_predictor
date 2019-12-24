@@ -14,14 +14,14 @@ private:
     void init()
     {
         ukf_predictor_ptr_.reset(new ukf_predictor);
-        num_future_sec_ = 100;
+        num_future_sec_ = 50;
     }
 
 public:
-    void setFutureTrajPredParam(int num_state, int num_meas,
+    void setFutureTrajPredParam(int num_state, int num_state_noise, int num_meas,
                                 float alpha, float beta, float lamda){
 
-        int num_aug = num_state + num_meas;
+        int num_aug = num_state + num_state_noise + num_meas;
         int num_sigma_points = 2 * (num_aug) + 1;
         Eigen::VectorXf weight_m; weight_m.resize(num_sigma_points);
         Eigen::VectorXf weight_c; weight_c.resize(num_sigma_points);
@@ -35,7 +35,7 @@ public:
             weight_c(i) = 0.5 / (lamda + num_aug);
         }
 
-        ukf_predictor_ptr_->setPredictionParams(num_state, num_meas,
+        ukf_predictor_ptr_->setPredictionParams(num_state, num_meas, num_aug, num_state_noise,
                                                 num_sigma_points, lamda,
                                                 weight_m, weight_c);
     }
