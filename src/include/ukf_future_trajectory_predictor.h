@@ -49,12 +49,14 @@ public:
         for(int i =0; i < num_future_sec_; ++i)
         {
             Eigen::MatrixXf Xsig_aug;
-            Xsig_aug = ukf_predictor_ptr_->generateSigmaPoints(current_state_x, current_state_p,
+            //keeping state cov P as the curr_state_P at each iteration
+            Eigen::MatrixXf const_p; const_p = current_state_p;
+            Xsig_aug = ukf_predictor_ptr_->generateSigmaPoints(current_state_x, const_p,
                                                                Q, R);
             Eigen::MatrixXf X_predicted;
             X_predicted = ukf_predictor_ptr_->predictUsingSigmaPoints(Xsig_aug, dt);
 
-            current_state_x = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted, current_state_p);
+            current_state_x = ukf_predictor_ptr_->predictMeanAndCovariance(X_predicted, const_p);
 
             future_state_vec.push_back(current_state_x);
 

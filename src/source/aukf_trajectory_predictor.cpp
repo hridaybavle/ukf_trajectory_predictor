@@ -36,7 +36,10 @@ void ukf_traj_pre::init()
     P.diagonal() << 1e-3, 1e-3, 1e-3, 1e-3, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-1;
     std::cout << "P " << P << std::endl;
     Q_.setZero(state_noise_size_, state_noise_size_);
-    Q_.diagonal() << 1e-3, 1e-3, 1e-10;
+    //simulation
+    //Q_.diagonal() << 1e-3, 1e-3, 1e-12;
+    //real
+    Q_.diagonal() << 1e-5, 1e-5, 1e-12;
     std::cout << "Q " << Q_ << std::endl;
     R_.setZero(measurement_size_, measurement_size_);
     R_.diagonal().fill(1e-2);

@@ -70,7 +70,7 @@ public:
         }
 
         S_ = Szz;
-        std::cout << "S_ " << S_ << std::endl;
+        //std::cout << "S_ " << S_ << std::endl;
 
         if(!S_.isZero())
             K_ = Szx * S_.inverse().eval();
@@ -78,7 +78,7 @@ public:
             K_.setZero(X_prediction.rows(), Z_predicted.rows());
 
         K_ = Szx * S_.inverse();
-        std::cout << "kalman gain " << K_ << std::endl;
+        //std::cout << "kalman gain " << K_ << std::endl;
 
 
         return K_;

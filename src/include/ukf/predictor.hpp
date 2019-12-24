@@ -113,13 +113,6 @@ public:
             X_predicted(2,i) = Xsig_aug(2,i) + Xsig_aug(3,i) * dt;                                          //y
             X_predicted(3,i) = sin(X_predicted(4,i)) * X_predicted(6,i);                                    //y_d
 
-
-            //            std::cout << "Xsig_aug rows "  << Xsig_aug.rows() << std::endl;
-            //            std::cout << "Xsig_aug(13,i) " << Xsig_aug(13,i) << std::endl;
-            //            std::cout << "Xsig_aug(14,i) " << Xsig_aug(14,i) << std::endl;
-            //            std::cout << "Xsig_aug(15,i) " << Xsig_aug(15,i) << std::endl;
-
-            //X_predicted.col(i) = X_predicted.col(i) + X_noise;
         }
 
         return X_predicted;
@@ -150,7 +143,7 @@ public:
 
 private:
     Eigen::MatrixXf prediction_f_;
-    int state_size_, state_noise_size_, measurement_size_, state_size_aug_;
+    size_t state_size_, state_noise_size_, measurement_size_, state_size_aug_;
     int num_sigma_points_;
     float lamda_;
     Eigen::VectorXf Wm_, Wc_;
