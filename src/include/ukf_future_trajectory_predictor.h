@@ -4,17 +4,17 @@ class future_trajectory_predictor
 {
 
 public:
-    future_trajectory_predictor() {
-        this->init();
+    future_trajectory_predictor(int num_future_sec) {
+        this->init(num_future_sec);
     }
     ~future_trajectory_predictor() {
     }
 
 private:
-    void init()
+    void init(int num_future_sec)
     {
         ukf_predictor_ptr_.reset(new ukf_predictor);
-        num_future_sec_ = 50;
+        num_future_sec_ = num_future_sec;
     }
 
 public:

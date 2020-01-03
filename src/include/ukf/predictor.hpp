@@ -101,12 +101,13 @@ public:
             X_predicted(5,i) = Xsig_aug(5,i) + Xsig_aug(6,i) * dt;                                          //z_d
             X_predicted(6,i) = Xsig_aug(6,i);  */                                                           //z_dd
 
-            X_predicted(9,i)= Xsig_aug(9,i) + Xsig_aug(12,i);                                               //curv_d
-            X_predicted(8,i)= Xsig_aug(8,i) + Xsig_aug(9,i) *dt;                                            //curv
-            X_predicted(7,i)= Xsig_aug(7,i) + Xsig_aug(11,i);                                               //acc
-            X_predicted(6,i) = Xsig_aug(6,i) + Xsig_aug(7,i)* dt;                                           //vel
+            //first predicting from curv_d until theta
+            X_predicted(9,i)= Xsig_aug(9,i)  + Xsig_aug(12,i);                                               //curv_d
+            X_predicted(8,i)= Xsig_aug(8,i)  + Xsig_aug(9,i)*dt;                                            //curv
+            X_predicted(7,i)= Xsig_aug(7,i)  + Xsig_aug(11,i);                                               //acc
+            X_predicted(6,i) = Xsig_aug(6,i) + Xsig_aug(7,i)*dt;                                           //vel
             X_predicted(5,i) = Xsig_aug(6,i) * Xsig_aug(8,i) + Xsig_aug(10,i);                              //tetha_d
-            X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i) * dt;                                          //theta
+            X_predicted(4,i) = Xsig_aug(4,i) + Xsig_aug(5,i)*dt;                                          //theta
             //second predicting from X to z_dd
             X_predicted(0,i) = Xsig_aug(0,i) + Xsig_aug(1,i) * dt;                                          //x
             X_predicted(1,i) = cos(X_predicted(4,i)) * X_predicted(6,i);                                    //x_d

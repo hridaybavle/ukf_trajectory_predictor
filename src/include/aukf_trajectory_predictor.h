@@ -22,6 +22,8 @@
 
 //tf
 #include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_datatypes.h>
 
 //ukf library
 #include "ukf/generic_ukf.hpp"
@@ -54,6 +56,9 @@ private:
     void getDronePoseTF();
     tf::TransformListener drone_pose_listener_;
 
+    tf::TransformBroadcaster drone_future_pose_broadcaster_;
+    void broadcastDroneFuturePose(std::vector<Eigen::VectorXf> future_state_vec);
+
 private:
     geometry_msgs::PointStamped measurements_;
     bool received_odom_data_;
@@ -64,6 +69,7 @@ private:
     //ukf related
 private:
     int state_size_, measurement_size_, state_noise_size_;
+    int num_future_sec_;
     bool simulation_;
     Eigen::MatrixXf Q_; Eigen::MatrixXf R_;
 
