@@ -15,7 +15,7 @@ int main(int argc, char **argv)
   //Open!
   ukf_traj_pre_process.setUp();
   //Start
-  ukf_traj_pre_process.start();
+  //ukf_traj_pre_process.start();
 
   ros::Rate r(frequency);
 
