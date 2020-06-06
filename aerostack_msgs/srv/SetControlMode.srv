@@ -1,0 +1,13 @@
+#Control mode
+#0: Default control mode
+#1: Pose control mode
+#2: Speed control mode
+#3: Ground speed control mode
+#4: Speed 3D control mode
+#5: Attitude control mode
+
+QuadrotorPidControllerMode controlMode
+
+---
+
+bool ack

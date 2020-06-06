@@ -1,0 +1,9 @@
+# This service returns incompatible behaviors list with the one sended as request
+
+BehaviorCommand behavior                     # Behavior to find incompatibilities with
+---
+BehaviorCommand[] incompatible_behaviors     # List of incompatible behaviors
+float64[] uids
+
+bool ack                                     # Acknowledgement
+string error_message                         # Error message

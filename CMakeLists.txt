@@ -1,73 +1,63 @@
+# toplevel CMakeLists.txt for a catkin workspace
+# catkin/cmake/toplevel.cmake
+
 cmake_minimum_required(VERSION 2.8.3)
 
-set(PROJECT_NAME ukf_trajectory_predictor)
-project(${PROJECT_NAME})
+set(CATKIN_TOPLEVEL TRUE)
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
-
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-#SET(CMAKE_BUILD_TYPE Release) # Release, RelWithDebInfo
-
-set(CMAKE_BUILD_TYPE "RELEASE")
-
-set(UKF_TRAJ_PRED_SOURCE_DIR
-    src/sources)
-
-set(UKF_TRAJ_PRED_INCLUDE_DIR
-    src/include
-    )
-
-FILE(GLOB_RECURSE UKF_TRAJ_PRED_SOURCE_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/source/*.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/source/ukf/*.cpp)
-
-FILE(GLOB_RECURSE UKF_TRAJ_PRED_HEADER_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/*.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ukf/*.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ukf/*.h)
-
-
-find_package(catkin REQUIRED
-    COMPONENTS roscpp std_msgs sensor_msgs tf_conversions tf cv_bridge robot_process)
-
-
-find_package(Eigen3)
-if(NOT EIGEN3_FOUND)
-    # Fallback to cmake_modules
-    find_package(cmake_modules REQUIRED)
-    find_package(Eigen REQUIRED)
-    set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
-    set(EIGEN3_LIBRARIES ${EIGEN_LIBRARIES})  # Not strictly necessary as Eigen is head only
-    # Possibly map additional variables to the EIGEN3_ prefix.
-    message(WARN "Using Eigen2!")
-else()
-    set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+# search for catkin within the workspace
+set(_cmd "catkin_find_pkg" "catkin" "${CMAKE_SOURCE_DIR}")
+execute_process(COMMAND ${_cmd}
+  RESULT_VARIABLE _res
+  OUTPUT_VARIABLE _out
+  ERROR_VARIABLE _err
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_STRIP_TRAILING_WHITESPACE
+)
+if(NOT _res EQUAL 0 AND NOT _res EQUAL 2)
+  # searching fot catkin resulted in an error
+  string(REPLACE ";" " " _cmd_str "${_cmd}")
+  message(FATAL_ERROR "Search for 'catkin' in workspace failed (${_cmd_str}): ${_err}")
 endif()
 
-catkin_package(
-    INCLUDE_DIRS ${UKF_TRAJ_PRED_INCLUDE_DIR}
-    LIBRARIES ukf_trajectory_predictor_lib
-    CATKIN_DEPENDS roscpp std_msgs sensor_msgs tf_conversions tf cv_bridge robot_process
-    )
+# include catkin from workspace or via find_package()
+if(_res EQUAL 0)
+  set(catkin_EXTRAS_DIR "${CMAKE_SOURCE_DIR}/${_out}/cmake")
+  # include all.cmake without add_subdirectory to let it operate in same scope
+  include(${catkin_EXTRAS_DIR}/all.cmake NO_POLICY_SCOPE)
+  add_subdirectory("${_out}")
 
-include_directories(${UKF_TRAJ_PRED_INCLUDE_DIR})
-include_directories(${catkin_INCLUDE_DIRS})
-include_directories(SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIRS})
+else()
+  # use either CMAKE_PREFIX_PATH explicitly passed to CMake as a command line argument
+  # or CMAKE_PREFIX_PATH from the environment
+  if(NOT DEFINED CMAKE_PREFIX_PATH)
+    if(NOT "$ENV{CMAKE_PREFIX_PATH}" STREQUAL "")
+      string(REPLACE ":" ";" CMAKE_PREFIX_PATH $ENV{CMAKE_PREFIX_PATH})
+    endif()
+  endif()
 
-add_library(ukf_trajectory_predictor_lib ${UKF_TRAJ_PRED_SOURCE_FILES} ${UKF_TRAJ_PRED_HEADER_FILES})
-add_dependencies(ukf_trajectory_predictor_lib ${PROJECT_NAME}_gencpp)
-add_dependencies(ukf_trajectory_predictor_lib ${catkin_EXPORTED_TARGETS})
-target_link_libraries(ukf_trajectory_predictor_lib ${catkin_LIBRARIES})
-target_link_libraries(ukf_trajectory_predictor_lib ${EIGEN3_LIBRARIES})
+  # list of catkin workspaces
+  set(catkin_search_path "")
+  foreach(path ${CMAKE_PREFIX_PATH})
+    if(EXISTS "${path}/.catkin")
+      list(FIND catkin_search_path ${path} _index)
+      if(_index EQUAL -1)
+        list(APPEND catkin_search_path ${path})
+      endif()
+    endif()
+  endforeach()
 
-add_executable(ukf_trajectory_predictor_node src/test/ukf_trajectory_predictor_node.cpp)
-add_dependencies(ukf_trajectory_predictor_node ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-target_link_libraries(ukf_trajectory_predictor_node ukf_trajectory_predictor_lib)
-target_link_libraries(ukf_trajectory_predictor_node ${catkin_LIBRARIES})
+  # search for catkin in all workspaces
+  set(CATKIN_TOPLEVEL_FIND_PACKAGE TRUE)
+  find_package(catkin QUIET
+    NO_POLICY_SCOPE
+    PATHS ${catkin_search_path}
+    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+  unset(CATKIN_TOPLEVEL_FIND_PACKAGE)
+
+  if(NOT catkin_FOUND)
+    message(FATAL_ERROR "find_package(catkin) failed. catkin was neither found in the workspace nor in the CMAKE_PREFIX_PATH. One reason may be that no ROS setup.sh was sourced before.")
+  endif()
+endif()
+
+catkin_workspace()

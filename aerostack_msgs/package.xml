@@ -1,0 +1,28 @@
+<package>
+	<name>aerostack_msgs</name>
+	<version>1.0.0</version>
+	<description>
+    		This package is aerostack_msgs.
+	</description>
+	<author email="alberto.camporredondo@gmail.com">Alberto Camporredondo</author>
+	<maintainer email="alberto.camporredondo@gmail.com">Alberto Camporredondo</maintainer>
+	<license>BSD-3</license>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+	<build_depend>sensor_msgs</build_depend>
+	<build_depend>geometry_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>opencv_apps</build_depend>
+
+	<run_depend>message_runtime</run_depend>
+	<run_depend>std_msgs</run_depend>
+	<run_depend>sensor_msgs</run_depend>
+	<run_depend>geometry_msgs</run_depend>
+  <run_depend>std_srvs</run_depend>
+  <run_depend>opencv_apps</run_depend>
+
+  <export></export>
+</package>
