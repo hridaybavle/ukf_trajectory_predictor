@@ -10,5 +10,9 @@ This package consists of a Unscented Kalman Filter implementation based on a car
 ```
 - Launch the code: 
 ```    
-    TODO
+    roslaunch ukf_trajectory_predictor ukf_trajectory_predictor.launch
+```
+- Use RVIZ to Visualize
+```
+	TODO
 ```
